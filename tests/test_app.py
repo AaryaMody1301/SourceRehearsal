@@ -1,0 +1,119 @@
+import json
+from pathlib import Path
+from urllib.parse import urlsplit
+
+from streamlit.testing.v1 import AppTest
+
+from source_rehearsal import demo
+from source_rehearsal.network import HttpClient, NetworkError
+
+APP = Path(__file__).parents[1] / "app.py"
+
+
+def button(app, label):
+    return next(item for item in app.button if item.label == label)
+
+
+def test_default_demo_rehearsal_and_contract_invalidation():
+    app = AppTest.from_file(str(APP)).run(timeout=20)
+    assert not app.exception
+    button(app, "Rehearse replacement").click().run(timeout=20)
+    assert not app.exception
+    assert any(w.value == "Changes the report" for w in app.warning)
+    assert app.session_state["report"][1]["summary"]["flag_changes"] == 1
+    app.sidebar.number_input[3].set_value(2.0).run(timeout=20)
+    assert not app.exception
+    assert not app.metric
+
+
+def test_equivalent_and_missing_data_scenarios():
+    app = AppTest.from_file(str(APP)).run(timeout=20)
+    app.selectbox[0].select("Equivalent copy").run()
+    button(app, "Rehearse replacement").click().run(timeout=20)
+    assert any(item.value == "Passes stated checks" for item in app.success)
+    app.selectbox[0].select("Missing year").run()
+    button(app, "Rehearse replacement").click().run(timeout=20)
+    assert any(item.value == "Insufficient evidence" for item in app.error)
+    assert not app.exception
+
+
+def test_live_discovery_without_key_is_disabled():
+    app = AppTest.from_file(str(APP)).run(timeout=20)
+    app.radio[1].set_value("SerpApi discovery").run()
+    assert button(app, "Discover alternatives").disabled
+    assert not app.exception
+
+
+def test_full_discovery_download_review_and_rehearsal(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    calls = []
+    definition = {"text": "Total population."}
+
+    def fake_json(self, url):
+        calls.append(urlsplit(url).hostname)
+        if urlsplit(url).hostname == "serpapi.com":
+            return {
+                "search_metadata": {"status": "Success", "id": "integration-fixture"},
+                "organic_results": [
+                    {
+                        "title": "Population, total",
+                        "link": "https://data.worldbank.org/indicator/SP.POP.TOTL",
+                    }
+                ],
+            }
+        return [{"pages": 1}, [{"id": "SP.POP.TOTL", "sourceNote": definition["text"]}]]
+
+    def fake_get(self, url):
+        rows = [
+            {
+                "indicator": {"id": "SP.POP.TOTL"},
+                "countryiso3code": row.country,
+                "date": str(row.year),
+                "value": int(row.population),
+            }
+            for row in demo.baseline().frame.itertuples()
+        ]
+        return json.dumps([{"page": 1, "pages": 1, "total": 9}, rows]).encode()
+
+    monkeypatch.setattr(HttpClient, "json", fake_json)
+    monkeypatch.setattr(HttpClient, "get", fake_get)
+    app = AppTest.from_file(str(APP)).run(timeout=20)
+    app.sidebar.text_input[1].set_value("fixture-key").run()
+    app.radio[1].set_value("SerpApi discovery").run()
+    button(app, "Discover alternatives").click().run(timeout=20)
+    assert len([host for host in calls if host == "serpapi.com"]) == 3
+    assert not app.exception
+    button(app, "Download replacement").click().run(timeout=20)
+    button(app, "Rehearse replacement").click().run(timeout=20)
+    assert app.session_state["report"][1]["verdict"] == "Insufficient evidence"
+    app.checkbox[0].check().run()
+    button(app, "Rehearse replacement").click().run(timeout=20)
+    result = app.session_state["report"][1]
+    assert result["verdict"] == "Passes stated checks"
+    assert result["candidate"]["evidence"]["discovery"]["search_id"] == "integration-fixture"
+    assert "fixture-key" not in json.dumps(result)
+    assert not app.exception
+
+    definition["text"] = "Revised population definition."
+    button(app, "Download replacement").click().run(timeout=20)
+    assert not app.checkbox[0].value  # Same CSV bytes, different evidence needs a fresh review.
+    button(app, "Rehearse replacement").click().run(timeout=20)
+    assert app.session_state["report"][1]["verdict"] == "Insufficient evidence"
+
+    def failed_get(self, url):
+        raise NetworkError("Publisher is unavailable.")
+
+    monkeypatch.setattr(HttpClient, "get", failed_get)
+    button(app, "Download replacement").click().run(timeout=20)
+    assert "live_candidate" not in app.session_state
+    assert "report" not in app.session_state
+    assert not app.exception
+
+    monkeypatch.setattr(HttpClient, "get", fake_get)
+    app.radio[0].set_value("World Bank").run()
+    button(app, "Fetch World Bank baseline").click().run(timeout=20)
+    assert "wb_baseline" in app.session_state
+    monkeypatch.setattr(HttpClient, "get", failed_get)
+    button(app, "Fetch World Bank baseline").click().run(timeout=20)
+    assert "wb_baseline" not in app.session_state
+    assert not app.exception
