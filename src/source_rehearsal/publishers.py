@@ -5,7 +5,7 @@ from urllib.parse import urlencode
 import pandas as pd
 
 from .discovery import Candidate, recognize
-from .ingest import csv_dataset, timestamp
+from .ingest import csv_dataset, read_csv, timestamp
 from .models import MAX_BYTES, Contract, Dataset, Mapping, Metadata
 from .network import HttpClient, NetworkError
 
@@ -122,6 +122,10 @@ def our_world_in_data(contract: Contract, http: HttpClient) -> Dataset:
         raise NetworkError("OWID measure metadata has changed schema.")
     data_url = root + ".csv?useColumnShortNames=false"
     raw = http.get(data_url)
+    csv_columns = list(read_csv(raw).columns)
+    measures = [column for column in csv_columns if column not in ("Entity", "Code", "Year")]
+    if len(measures) != 1 or not {"Code", "Year"} <= set(csv_columns):
+        raise NetworkError("Expected one annual population column in the OWID CSV.")
     unit_raw = str(measure.get("unit", "unknown"))
     unit = "persons" if unit_raw.lower() in ("people", "persons", "person") else "unknown"
     description = measure.get("descriptionShort") or measure.get("description") or ""
@@ -138,14 +142,20 @@ def our_world_in_data(contract: Contract, http: HttpClient) -> Dataset:
         definition=definition,
         upstream=("UN World Population Prospects",),
     )
-    data = csv_dataset(raw, Mapping("Code", "Year", value_column), meta)
+    data = csv_dataset(raw, Mapping("Code", "Year", measures[0]), meta)
     # Region aggregates are outside the MVP. Keep every requested year; do not sample.
     data.frame = data.frame[
         data.frame.country.isin(contract.countries)
         & data.frame.year.between(contract.start_year, contract.end_year)
     ].copy()
     data.transforms.append("Select only requested ISO3 country codes and historical years")
-    data.evidence = {"chart_metadata": metadata, "original_unit": unit_raw, "data_url": data_url}
+    data.evidence = {
+        "chart_metadata": metadata,
+        "original_unit": unit_raw,
+        "data_url": data_url,
+        "metadata_column": value_column,
+        "csv_column": measures[0],
+    }
     return data
 
 

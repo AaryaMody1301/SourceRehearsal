@@ -97,6 +97,25 @@ def test_owid_never_guesses_an_unknown_unit():
     assert data.metadata.unit == "unknown"
 
 
+def test_owid_aligns_a_single_measure_with_different_export_names():
+    fixture = OwidFixture()
+    fixture.json = lambda url: {
+        "columns": {
+            "Population - all sexes": {
+                "unit": "people",
+                "descriptionShort": "Mid-year population estimates.",
+            }
+        }
+    }
+    data = our_world_in_data(demo_contract(), fixture)
+    assert data.frame.iloc[0].population == 1000
+    assert data.evidence["metadata_column"] == "Population - all sexes"
+    assert data.evidence["csv_column"] == "Population"
+    fixture.get = lambda url: b"Code,Year,Population,Extra\nIND,2020,1000,2\n"
+    with pytest.raises(NetworkError, match="one annual population column"):
+        our_world_in_data(demo_contract(), fixture)
+
+
 def test_unsupported_candidate_cannot_download():
     candidate = Candidate("World Bank", "https://evil.test/data", "Title", "query", "id")
     with pytest.raises(NetworkError):

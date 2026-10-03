@@ -3,7 +3,7 @@
 ## Completed locally
 
 - Clean virtual environment and editable installation of the app plus development tools.
-- 62 passing tests on Python 3.13, including a full Streamlit discovery → download →
+- 63 passing tests on Python 3.13, including a full Streamlit discovery → download →
   metadata hold → review → rehearsal interaction with mocked SerpApi/World Bank responses.
 - Ruff lint and formatting checks.
 - CLI run and JSON/HTML evidence generation: the synthetic threshold-flip scenario
@@ -18,13 +18,15 @@
   pushes run it in a non-blocking CI step; check that step rather than the workflow's overall
   green status to determine whether actual publisher downloads succeeded.
 
-## Not yet validated live
+## Live status and remaining checks
 
 - SerpApi credentials and live query results: no key configured in this execution.
-- Runtime downloads from both publishers: an attempted World Bank HTTPS request timed
-  out at the execution environment's proxy. That is an environmental observation, not
-  evidence that the publisher is down. Search-service retrieval of World Bank indicator
-  metadata succeeded, but it does not substitute for an application download test.
+- World Bank live download succeeded in GitHub run 37106256855: nine records for
+  IND/USA/BRA, 2020–2022; only the expected human metadata-review hold remained.
+  The local execution proxy still blocks publisher networking.
+- OWID's first live check exposed different metadata and CSV measure names. The adapter
+  now aligns exactly one metadata measure with exactly one CSV measure, records both names,
+  and rejects ambiguous exports. Check the latest live-run logs for verification of that fix.
 - Cross-publisher numerical/decision differences on real datasets.
 - A real browser visual review and screen recording. Streamlit AppTest exercised the
   widgets and interactions; it does not validate browser rendering.
