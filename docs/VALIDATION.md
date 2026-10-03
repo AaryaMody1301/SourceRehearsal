@@ -26,7 +26,11 @@
   The local execution proxy still blocks publisher networking.
 - OWID's first live check exposed different metadata and CSV measure names. The adapter
   now aligns exactly one metadata measure with exactly one CSV measure, records both names,
-  and rejects ambiguous exports. Check the latest live-run logs for verification of that fix.
+  and rejects ambiguous exports. The fixed live run 37106549046 downloaded all nine OWID
+  records successfully, as well as all nine World Bank records. Both retained only the
+  expected human metadata-review hold. Metadata key: `Population - Sex: all - Age: all -
+  Variant: estimates`; CSV column: `Population (historical estimates)`.
+  Evidence: https://github.com/AaryaMody1301/SourceRehearsal/actions/runs/37106549046
 - Cross-publisher numerical/decision differences on real datasets.
 - A real browser visual review and screen recording. Streamlit AppTest exercised the
   widgets and interactions; it does not validate browser rendering.
@@ -47,3 +51,4 @@
 
 The labelled synthetic controls illustrate behavior and test failure handling. They are
 not a benchmark of source replacement quality and cannot support a live-performance claim.
+
