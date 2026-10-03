@@ -47,7 +47,8 @@ loaded. Never commit your key. It is not included in caches or exported evidence
 3. Click **Rehearse replacement**. One highlight changes, while all values remain within
    the default 0.5% tolerance. This illustrates why compatibility alone is insufficient.
 4. Try **Equivalent copy**, **Missing year**, **Wrong units**, and the other controls.
-5. Download the full JSON or standalone HTML evidence.
+5. Download the full JSON or standalone HTML evidence. HTML shows source snapshots,
+   blocking checks, a comparison summary, changed conclusions, and expandable full evidence.
 
 CLI alternative:
 
@@ -62,13 +63,25 @@ source-rehearsal --scenario "Threshold flip" --output reports/demo
    needs explicit country/year/value mappings, units, source reference, definition, and terms.
 3. Review baseline metadata and the publisher's reuse terms.
 4. Choose **SerpApi discovery**, enter your key, and discover alternatives.
-5. Inspect search evidence. The MVP automatically downloads only results identifying
+5. Inspect search evidence. The baseline publisher is excluded from replacement choices.
+   The MVP automatically downloads only results identifying
    World Bank `SP.POP.TOTL` or OWID `population-unwpp`. Other results remain in the evidence.
 6. Select a replacement, download it, and review its metadata before running the rehearsal.
 
 Both publishers may derive estimates from UN World Population Prospects. Matching data
 is not independent corroboration. Missing years, unknown units, or unreviewed definitions
 block a passing verdict. The app never replaces a source automatically.
+
+To check real publisher downloads without SerpApi credentials:
+
+```bash
+source-rehearsal --check-public-sources --output reports/public-sources
+```
+
+This downloads real IND/USA/BRA population data for 2020–2022 and records source hashes,
+metadata, and validation holds. It does not approve metadata or test SerpApi discovery.
+The same non-blocking check runs on branch pushes in CI; inspect that step's actual status
+and logs, because an unavailable publisher does not fail the deterministic test jobs.
 
 ## Results
 
@@ -99,6 +112,8 @@ Limits: 20 countries, 30 years, 10 MB per response/upload, 100,000 rows. CSV upl
 not sent to SerpApi; queries use only the country codes, year range, and public indicator.
 Dataset downloads use fixed HTTPS publisher hosts and do not follow redirects. Uploaded
 source URLs are evidence references and are never fetched automatically.
+CSV headers must be unique and each row must match the header's field count. Quoted commas
+and newlines are supported. Failed refreshes clear the prior download and its report.
 
 ## Development and verification
 

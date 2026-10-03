@@ -15,10 +15,16 @@ WB_LICENSE = "https://datacatalog.worldbank.org/int/public-licenses#cc-by"
 def world_bank(contract: Contract, http: HttpClient) -> Dataset:
     root = "https://api.worldbank.org/v2/"
     meta_payload = http.json(root + "indicator/SP.POP.TOTL?format=json")
-    if not isinstance(meta_payload, list) or len(meta_payload) != 2 or not meta_payload[1]:
+    if (
+        not isinstance(meta_payload, list)
+        or len(meta_payload) != 2
+        or not isinstance(meta_payload[1], list)
+        or len(meta_payload[1]) != 1
+        or not isinstance(meta_payload[1][0], dict)
+    ):
         raise NetworkError("World Bank indicator metadata is unavailable.")
     indicator = meta_payload[1][0]
-    if indicator.get("id") != "SP.POP.TOTL":
+    if indicator.get("id") != "SP.POP.TOTL" or not isinstance(indicator.get("sourceNote", ""), str):
         raise NetworkError("World Bank returned an unexpected indicator.")
     raw_pages, rows, total, pages = [], [], None, None
     page = 1
@@ -42,7 +48,7 @@ def world_bank(contract: Contract, http: HttpClient) -> Dataset:
         try:
             payload = json.loads(raw)
             header, values = payload
-            if not isinstance(values, list):
+            if not isinstance(header, dict) or not isinstance(values, list):
                 raise ValueError
             if pages is None:
                 pages, total = int(header["pages"]), int(header["total"])
@@ -53,7 +59,12 @@ def world_bank(contract: Contract, http: HttpClient) -> Dataset:
             if int(header["page"]) != page:
                 raise ValueError
             for row in values:
-                if row["indicator"]["id"] != "SP.POP.TOTL":
+                if (
+                    not isinstance(row, dict)
+                    or not isinstance(row.get("indicator"), dict)
+                    or row["indicator"].get("id") != "SP.POP.TOTL"
+                    or not isinstance(row.get("countryiso3code"), str)
+                ):
                     raise ValueError
                 rows.append(
                     {

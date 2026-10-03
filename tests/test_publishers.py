@@ -3,6 +3,7 @@ from urllib.parse import parse_qs, urlsplit
 
 import pytest
 
+from source_rehearsal import cli
 from source_rehearsal.demo import demo_contract
 from source_rehearsal.discovery import Candidate
 from source_rehearsal.network import NetworkError
@@ -48,6 +49,18 @@ def test_worldbank_loads_every_page_and_keeps_unreviewed_metadata():
 def test_worldbank_rejects_partial_pagination():
     with pytest.raises(NetworkError, match="incomplete"):
         world_bank(demo_contract(), WorldBankFixture(missing=True))
+
+
+def test_worldbank_rejects_malformed_metadata_and_pages():
+    fixture = WorldBankFixture()
+    for malformed in [[{}, {"id": "SP.POP.TOTL"}], [{}, ["invalid"]], [{}, []]]:
+        fixture.json = lambda url, payload=malformed: payload
+        with pytest.raises(NetworkError):
+            world_bank(demo_contract(), fixture)
+    fixture = WorldBankFixture()
+    fixture.get = lambda url: b"[[], [null]]"
+    with pytest.raises(NetworkError):
+        world_bank(demo_contract(), fixture)
 
 
 class OwidFixture:
@@ -100,3 +113,26 @@ def test_discovery_provenance_is_attached():
     )
     data = download(candidate, demo_contract(), WorldBankFixture())
     assert data.evidence["discovery"]["search_id"] == "fixture-id"
+
+
+def test_public_download_command_preserves_review_hold_and_reports_failures(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        "sys.argv",
+        ["source-rehearsal", "--check-public-sources", "--output", str(tmp_path / "sources")],
+    )
+    monkeypatch.setattr(
+        cli, "world_bank", lambda contract, http: world_bank(contract, WorldBankFixture())
+    )
+
+    def unavailable(contract, http):
+        raise NetworkError("Publisher unavailable.")
+
+    monkeypatch.setattr(cli, "our_world_in_data", unavailable)
+    with pytest.raises(SystemExit) as outcome:
+        cli.main()
+    assert outcome.value.code == 1
+    result = json.loads((tmp_path / "sources.json").read_text())
+    assert result["World Bank"]["status"] == "downloaded"
+    assert result["World Bank"]["metadata"]["reviewed"] is False
+    assert result["World Bank"]["checks"]
+    assert result["Our World in Data"]["status"] == "failed"

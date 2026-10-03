@@ -111,6 +111,12 @@ def test_explicit_scale_and_mapping():
         csv_dataset(
             demo.BASELINE, Mapping("country", "country", "population"), demo.demo_metadata()
         )
+    oversized = csv_dataset(
+        b"country,year,population\nIND,2020,18446744073709552\n",
+        Mapping(scale=1000),
+        demo.demo_metadata(),
+    )
+    assert oversized.frame.iloc[0].population > 1e11  # Must not wrap into a plausible small count.
 
 
 def test_html_escapes_untrusted_source_text():
@@ -119,6 +125,34 @@ def test_html_escapes_untrusted_source_text():
     html = to_html(compare(data, data, demo.demo_contract()))
     assert "<script>" not in html
     assert "&lt;script&gt;" in html
+    assert "Source snapshots" in html
+    assert "Full reproducible evidence" in html
+
+
+def test_csv_preserves_quoted_fields_and_rejects_ambiguous_rows():
+    data = read_csv(b'Code,Year,Value,Note\nIND,2020,1000,"two, fields\nwith a newline"\n')
+    assert data.iloc[0].Note == "two, fields\nwith a newline"
+    for raw in [
+        b"country,year,population,population\nIND,2020,100,999\n",
+        b"country,year,population\nIND,2020,100,999\n",
+        b"country,year,population\nIND,2020\n",
+        b'country,year,population\nIND,2020,"100\n',
+    ]:
+        with pytest.raises(ValueError):
+            read_csv(raw)
+
+
+def test_html_shows_changed_decisions_and_blocking_issues():
+    changed = to_html(
+        compare(demo.baseline(), demo.candidate("Threshold flip"), demo.demo_contract())
+    )
+    blocked = to_html(
+        compare(demo.baseline(), demo.candidate("Missing year"), demo.demo_contract())
+    )
+    assert "Changed conclusions" in changed and "1020.2" in changed
+    assert "Highlighted before" in changed and "Highlighted after" in changed
+    assert "Missing 1 required" in blocked
+    assert "Comparison was blocked" in blocked
 
 
 def test_shared_upstream_is_disclosed():

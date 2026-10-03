@@ -55,6 +55,14 @@ def test_zero_results_never_invents_candidates(tmp_path):
     assert result["errors"] == []
 
 
+def test_baseline_publisher_is_excluded_but_search_evidence_is_kept(tmp_path):
+    result = SearchClient("key", tmp_path / "cache.sqlite", SearchFixture()).discover(
+        demo_contract(), "https://data.worldbank.org/indicator/SP.POP.TOTL?locations=IN"
+    )
+    assert [c["publisher"] for c in result["candidates"]] == ["Our World in Data"]
+    assert len(result["searches"][0]["organic_results"]) == 3
+
+
 def test_failed_search_has_no_fake_candidates_or_secret(tmp_path):
     result = SearchClient("key", tmp_path / "cache.sqlite", SearchFixture(error=True)).discover(
         demo_contract()
@@ -87,6 +95,8 @@ def test_missing_key_never_calls_network(tmp_path):
         "https://user:pass@data.worldbank.org/indicator/SP.POP.TOTL",
         "http://ourworldindata.org/grapher/population-unwpp",
         "https://ourworldindata.org/grapher/population-density",
+        "https://[invalid",
+        "https://data.worldbank.org:bad/indicator/SP.POP.TOTL",
     ],
 )
 def test_source_recognition_is_strict(url):

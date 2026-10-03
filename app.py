@@ -52,7 +52,9 @@ def review(data, prefix):
             return data
         reviewed = st.checkbox(
             "I reviewed the definition, units, country/year meaning, scope, and reuse terms.",
-            key=prefix + "_review_" + data.sha256,
+            key=prefix
+            + "_review_"
+            + fingerprint([data.sha256, asdict(meta), data.transforms, data.evidence]),
         )
         return replace(data, metadata=replace(meta, reviewed=reviewed))
 
@@ -152,6 +154,8 @@ with left:
         baseline = upload_dataset("Baseline")
     else:
         if st.button("Fetch World Bank baseline"):
+            st.session_state.pop("wb_baseline", None)
+            st.session_state.pop("report", None)
             try:
                 with st.spinner("Loading population data and indicator metadata…"):
                     st.session_state["wb_baseline"] = (scope_id, world_bank(contract, HttpClient()))
@@ -184,7 +188,7 @@ with right:
         if st.button("Discover alternatives", disabled=not key.strip()):
             with st.spinner("Searching up to three queries…"):
                 client = SearchClient(key, Path(".cache/search.sqlite"))
-                result = client.discover(contract)
+                result = client.discover(contract, baseline.metadata.source_url if baseline else "")
                 st.session_state["discovery"] = (scope_id, result)
                 st.session_state.pop("live_candidate", None)
         if not key.strip():
@@ -208,6 +212,8 @@ with right:
                 st.write(chosen.title)
                 st.write(chosen.source_url)
                 if st.button("Download replacement"):
+                    st.session_state.pop("live_candidate", None)
+                    st.session_state.pop("report", None)
                     try:
                         with st.spinner("Downloading data and metadata…"):
                             loaded = download(chosen, contract)
@@ -220,7 +226,10 @@ with right:
                     candidate = review(loaded[1], "Replacement")
                     st.dataframe(candidate.frame, hide_index=True)
             else:
-                st.info("No supported population source found. Search evidence is available above.")
+                st.info(
+                    "No supported alternative source found. The baseline source is excluded; "
+                    "search evidence is available above."
+                )
 
 st.divider()
 if baseline is None or candidate is None:

@@ -21,3 +21,8 @@ jobs:
       - run: ruff format --check .
       - run: python -m pytest -q
       - run: source-rehearsal --scenario "Threshold flip" --output reports/demo
+      # ponytail: real APIs can be unavailable; keep download checks separate from deterministic CI.
+      - name: Check real public publisher downloads
+        if: matrix.python == '3.13' && github.event_name == 'push'
+        continue-on-error: true
+        run: source-rehearsal --check-public-sources --output reports/public-sources

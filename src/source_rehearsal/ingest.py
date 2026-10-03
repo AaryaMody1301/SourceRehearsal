@@ -1,7 +1,8 @@
+import csv
 import math
 from datetime import datetime, timezone
 from hashlib import sha256
-from io import BytesIO
+from io import StringIO
 
 import pandas as pd
 
@@ -16,12 +17,24 @@ def read_csv(raw: bytes) -> pd.DataFrame:
     if not raw or len(raw) > MAX_BYTES:
         raise ValueError("CSV must be nonempty and at most 10 MB.")
     try:
-        frame = pd.read_csv(BytesIO(raw), encoding="utf-8-sig", dtype=str)
-    except (UnicodeError, pd.errors.ParserError, pd.errors.EmptyDataError) as exc:
+        reader = csv.reader(StringIO(raw.decode("utf-8-sig"), newline=""), strict=True)
+        header = [name.strip() for name in next(reader)]
+        if not header or not all(header) or len(set(header)) != len(header):
+            raise ValueError("CSV column names must be nonempty and unique.")
+        rows = []
+        for row in reader:
+            if not row:
+                continue
+            if len(row) != len(header):
+                raise ValueError("Every CSV row must have the same number of fields as the header.")
+            rows.append(row)
+            if len(rows) > MAX_ROWS:
+                raise ValueError("CSV must contain 1–100,000 rows.")
+    except (UnicodeError, csv.Error, StopIteration) as exc:
         raise ValueError("Upload a valid UTF-8 comma-separated CSV.") from exc
-    if frame.empty or len(frame) > MAX_ROWS:
+    if not rows:
         raise ValueError("CSV must contain 1–100,000 rows.")
-    return frame
+    return pd.DataFrame(rows, columns=header, dtype="string")
 
 
 def normalize(frame: pd.DataFrame, mapping: Mapping) -> pd.DataFrame:
@@ -35,7 +48,7 @@ def normalize(frame: pd.DataFrame, mapping: Mapping) -> pd.DataFrame:
     out["country"] = out["country"].astype("string").str.strip().str.upper()
     for column in ["year", "population"]:
         out[column] = pd.to_numeric(out[column], errors="coerce")
-    out["population"] *= mapping.scale
+    out["population"] = out["population"].astype(float) * mapping.scale
     return out
 
 

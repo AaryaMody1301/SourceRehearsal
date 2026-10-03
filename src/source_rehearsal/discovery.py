@@ -22,8 +22,16 @@ class Candidate:
 
 
 def recognize(link: str) -> tuple[str, str] | None:
-    parsed = urlsplit(link)
-    if parsed.scheme != "https" or parsed.username or parsed.password:
+    try:
+        parsed = urlsplit(link)
+        if (
+            parsed.scheme != "https"
+            or parsed.username
+            or parsed.password
+            or parsed.port not in (None, 443)
+        ):
+            return None
+    except ValueError:
         return None
     if parsed.hostname == "data.worldbank.org" and parsed.path.rstrip("/") == (
         "/indicator/SP.POP.TOTL"
@@ -117,9 +125,9 @@ class SearchClient:
             )
         return {**data, "cached": False}
 
-    def discover(self, contract: Contract) -> dict:
+    def discover(self, contract: Contract, exclude_url: str = "") -> dict:
         candidates, evidence, errors = [], [], []
-        seen = set()
+        seen = {recognize(exclude_url)}
         for query in queries(contract):
             try:
                 result = self.search(query)

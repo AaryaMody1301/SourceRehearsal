@@ -3,13 +3,20 @@
 ## Completed locally
 
 - Clean virtual environment and editable installation of the app plus development tools.
-- 55 passing tests on Python 3.13, including a full Streamlit discovery → download →
+- 62 passing tests on Python 3.13, including a full Streamlit discovery → download →
   metadata hold → review → rehearsal interaction with mocked SerpApi/World Bank responses.
 - Ruff lint and formatting checks.
 - CLI run and JSON/HTML evidence generation: the synthetic threshold-flip scenario
   produces exactly one highlight flip with no values beyond the default tolerance.
 - Primary API documentation reviewed for SerpApi organic results, World Bank pagination,
   and OWID chart CSV/metadata endpoints. OWID requests long column names explicitly.
+- GitHub CI passed on Python 3.11 and 3.13 for the initial implementation commit.
+- Ponytail build pass: strict stdlib CSV parsing, readable HTML reports, baseline-source
+  exclusion, malformed-response handling, integer-scaling overflow prevention, review resets
+  when source evidence changes, and stale-download invalidation regression checks.
+- The public-source CLI records real downloads separately from metadata approval. Branch
+  pushes run it in a non-blocking CI step; check that step rather than the workflow's overall
+  green status to determine whether actual publisher downloads succeeded.
 
 ## Not yet validated live
 
@@ -19,7 +26,6 @@
   evidence that the publisher is down. Search-service retrieval of World Bank indicator
   metadata succeeded, but it does not substitute for an application download test.
 - Cross-publisher numerical/decision differences on real datasets.
-- CI on GitHub's Python 3.11 and 3.13 runners (check the PR's workflow status).
 - A real browser visual review and screen recording. Streamlit AppTest exercised the
   widgets and interactions; it does not validate browser rendering.
 

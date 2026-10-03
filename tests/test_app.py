@@ -5,7 +5,7 @@ from urllib.parse import urlsplit
 from streamlit.testing.v1 import AppTest
 
 from source_rehearsal import demo
-from source_rehearsal.network import HttpClient
+from source_rehearsal.network import HttpClient, NetworkError
 
 APP = Path(__file__).parents[1] / "app.py"
 
@@ -47,6 +47,7 @@ def test_live_discovery_without_key_is_disabled():
 def test_full_discovery_download_review_and_rehearsal(monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)
     calls = []
+    definition = {"text": "Total population."}
 
     def fake_json(self, url):
         calls.append(urlsplit(url).hostname)
@@ -60,7 +61,7 @@ def test_full_discovery_download_review_and_rehearsal(monkeypatch, tmp_path):
                     }
                 ],
             }
-        return [{"pages": 1}, [{"id": "SP.POP.TOTL", "sourceNote": "Total population."}]]
+        return [{"pages": 1}, [{"id": "SP.POP.TOTL", "sourceNote": definition["text"]}]]
 
     def fake_get(self, url):
         rows = [
@@ -91,4 +92,28 @@ def test_full_discovery_download_review_and_rehearsal(monkeypatch, tmp_path):
     assert result["verdict"] == "Passes stated checks"
     assert result["candidate"]["evidence"]["discovery"]["search_id"] == "integration-fixture"
     assert "fixture-key" not in json.dumps(result)
+    assert not app.exception
+
+    definition["text"] = "Revised population definition."
+    button(app, "Download replacement").click().run(timeout=20)
+    assert not app.checkbox[0].value  # Same CSV bytes, different evidence needs a fresh review.
+    button(app, "Rehearse replacement").click().run(timeout=20)
+    assert app.session_state["report"][1]["verdict"] == "Insufficient evidence"
+
+    def failed_get(self, url):
+        raise NetworkError("Publisher is unavailable.")
+
+    monkeypatch.setattr(HttpClient, "get", failed_get)
+    button(app, "Download replacement").click().run(timeout=20)
+    assert "live_candidate" not in app.session_state
+    assert "report" not in app.session_state
+    assert not app.exception
+
+    monkeypatch.setattr(HttpClient, "get", fake_get)
+    app.radio[0].set_value("World Bank").run()
+    button(app, "Fetch World Bank baseline").click().run(timeout=20)
+    assert "wb_baseline" in app.session_state
+    monkeypatch.setattr(HttpClient, "get", failed_get)
+    button(app, "Fetch World Bank baseline").click().run(timeout=20)
+    assert "wb_baseline" not in app.session_state
     assert not app.exception
