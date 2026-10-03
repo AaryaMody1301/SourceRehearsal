@@ -70,6 +70,11 @@ class SearchClient:
     def connection(self):
         return sqlite3.connect(self.cache, timeout=10)
 
+    def usage(self) -> dict:
+        with self.connection() as db:
+            used = db.execute("SELECT COUNT(*) FROM attempts").fetchone()[0]
+        return {"attempts": used, "limit": self.budget, "remaining": max(0, self.budget - used)}
+
     def search(self, query: str) -> dict:
         if not self.api_key:
             raise NetworkError("Configure a SerpApi key to run live discovery.")
@@ -95,11 +100,21 @@ class SearchClient:
             }
         )
         response = self.http.json(url)
-        if not isinstance(response, dict) or response.get("error"):
+        if not isinstance(response, dict):
             raise NetworkError(
                 "SerpApi could not complete this search. Check your key and credits."
             )
         metadata = response.get("search_metadata", {})
+        information = response.get("search_information", {})
+        empty = (
+            isinstance(information, dict)
+            and information.get("organic_results_state") == "Fully empty"
+            and not response.get("organic_results")
+        )
+        if response.get("error") and not empty:
+            raise NetworkError(
+                "SerpApi could not complete this search. Check your key and credits."
+            )
         if not isinstance(metadata, dict) or metadata.get("status") != "Success":
             raise NetworkError(
                 "SerpApi returned an incomplete search. No candidates were inferred."
@@ -112,6 +127,9 @@ class SearchClient:
             "query": query,
             "search_id": str(metadata.get("id", "")),
             "created_at": str(metadata.get("created_at", "")),
+            "organic_results_state": str(information.get("organic_results_state", ""))[:200]
+            if isinstance(information, dict)
+            else "",
             "organic_results": [
                 {k: str(item.get(k, ""))[:2000] for k in ("title", "link", "snippet")}
                 for item in organic[:20]
@@ -126,8 +144,9 @@ class SearchClient:
         return {**data, "cached": False}
 
     def discover(self, contract: Contract, exclude_url: str = "") -> dict:
-        candidates, evidence, errors = [], [], []
-        seen = {recognize(exclude_url)}
+        candidates, evidence, errors, diagnostics = [], [], [], []
+        excluded = recognize(exclude_url)
+        seen = set()
         for query in queries(contract):
             try:
                 result = self.search(query)
@@ -137,7 +156,14 @@ class SearchClient:
             evidence.append(result)
             for row in result["organic_results"]:
                 supported = recognize(row["link"])
-                if supported and supported not in seen:
+                if not supported:
+                    reason = "Unsupported source or indicator"
+                elif supported == excluded:
+                    reason = "Baseline source excluded"
+                elif supported in seen:
+                    reason = "Duplicate source"
+                else:
+                    reason = "Downloadable candidate; metadata review required"
                     publisher, slug = supported
                     seen.add(supported)
                     candidates.append(
@@ -153,4 +179,13 @@ class SearchClient:
                             )
                         )
                     )
-        return {"candidates": candidates, "searches": evidence, "errors": errors}
+                diagnostics.append(
+                    {"query": query, "title": row["title"], "url": row["link"], "reason": reason}
+                )
+        return {
+            "candidates": candidates,
+            "searches": evidence,
+            "errors": errors,
+            "diagnostics": diagnostics,
+            "local_budget": self.usage(),
+        }

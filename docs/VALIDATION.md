@@ -1,6 +1,27 @@
 # Validation status — October 3, 2026
 
-## Completed locally
+## Phase 2 — live-workflow readiness
+
+- PR #1 is merged into main at `d79d4aed673bcfb2908f8f4461d29e57c0ed39ea`.
+- Clean Python 3.12 environment: 70 tests pass; Ruff lint and format checks pass.
+- Discovery diagnostics cover supported, unsupported, duplicate, and baseline-excluded
+  results. Local budget accounting is visible and cached queries do not consume attempts.
+- SerpApi's documented `Success` plus `Fully empty`/error response is recorded as empty
+  search evidence, not an authentication failure. Non-success responses still fail closed.
+- Streamlit regression checks confirm changing the baseline hides prior discovery choices;
+  downloaded evidence includes result-selection diagnostics and search failures.
+- `--check-discovery` tests cover missing credentials, successful fixture downloads,
+  no candidates, failed searches, and failed downloads. They verify sanitized exports and
+  that metadata is never automatically approved. These are fixtures, not live API outcomes.
+- Synthetic CLI replay still produces one threshold flip, zero rank changes, and zero
+  values beyond tolerance. This is not a real-data evaluation.
+- Browser visual verification was attempted, but the browser installer failed with an
+  `UnknownIssuer` certificate error fetching Chrome version information. Certificate
+  verification was not bypassed; no browser rendering claim is made. AppTest is verified.
+- No SerpApi key was configured; live SerpApi search/download verification remains an
+  owner-run acceptance check. No new project dependencies were added.
+
+## Phase 1 — completed locally
 
 - Clean virtual environment and editable installation of the app plus development tools.
 - 63 passing tests on Python 3.13, including a full Streamlit discovery → download →
@@ -38,10 +59,15 @@
 ## Owner live acceptance procedure
 
 1. Install from the implementation branch/merged main and run `streamlit run app.py`.
+   Optionally set `SERPAPI_API_KEY` locally and first run
+   `source-rehearsal --check-discovery --output reports/live-discovery`.
+   Keep the generated JSON as observed search/download evidence. Inspect download checks;
+   a completed command does not approve metadata or establish a report verdict.
 2. Use IND/USA/BRA, 2020–2022; choose World Bank and fetch the baseline.
 3. Read the definition, units, and terms; confirm the metadata review.
 4. Enter the SerpApi key locally and discover alternatives. Verify three or fewer query
-   attempts, real search IDs, and a genuine supported OWID result. Do not claim the
+   attempts, real search IDs, and a genuine supported OWID result. Inspect selection
+   diagnostics and the local ledger (not the account billing balance). Do not claim the
    discovery passes if no supported replacement was found.
 5. Download OWID and review the retrieved metadata; verify required country/year coverage.
 6. Rehearse, inspect every result category, and save the JSON evidence with hashes,
@@ -51,4 +77,3 @@
 
 The labelled synthetic controls illustrate behavior and test failure handling. They are
 not a benchmark of source replacement quality and cannot support a live-performance claim.
-

@@ -82,6 +82,7 @@ def test_full_discovery_download_review_and_rehearsal(monkeypatch, tmp_path):
     app.radio[1].set_value("SerpApi discovery").run()
     button(app, "Discover alternatives").click().run(timeout=20)
     assert len([host for host in calls if host == "serpapi.com"]) == 3
+    assert any("3/200 uncached attempts used" in c.value for c in app.caption)
     assert not app.exception
     button(app, "Download replacement").click().run(timeout=20)
     button(app, "Rehearse replacement").click().run(timeout=20)
@@ -91,6 +92,8 @@ def test_full_discovery_download_review_and_rehearsal(monkeypatch, tmp_path):
     result = app.session_state["report"][1]
     assert result["verdict"] == "Passes stated checks"
     assert result["candidate"]["evidence"]["discovery"]["search_id"] == "integration-fixture"
+    assert result["candidate"]["evidence"]["search_diagnostics"]
+    assert any("Local search guard:" in c.value for c in app.caption)
     assert "fixture-key" not in json.dumps(result)
     assert not app.exception
 
@@ -111,8 +114,13 @@ def test_full_discovery_download_review_and_rehearsal(monkeypatch, tmp_path):
 
     monkeypatch.setattr(HttpClient, "get", fake_get)
     app.radio[0].set_value("World Bank").run()
+    assert not any(s.label == "Supported replacement" for s in app.selectbox)
     button(app, "Fetch World Bank baseline").click().run(timeout=20)
     assert "wb_baseline" in app.session_state
+    assert not any(s.label == "Supported replacement" for s in app.selectbox)
+    button(app, "Discover alternatives").click().run(timeout=20)
+    assert not app.session_state["discovery"][1]["candidates"]
+    assert any("Baseline source excluded" in j.value for j in app.json)
     monkeypatch.setattr(HttpClient, "get", failed_get)
     button(app, "Fetch World Bank baseline").click().run(timeout=20)
     assert "wb_baseline" not in app.session_state
