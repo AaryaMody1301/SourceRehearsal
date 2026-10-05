@@ -303,7 +303,7 @@ input_id = fingerprint(
         "cevidence": candidate.evidence,
     }
 )
-if st.button("Rehearse replacement", type="primary"):
+if st.button("Rehearse replacement"):
     st.session_state["report"] = (input_id, compare(baseline, candidate, contract))
 saved = st.session_state.get("report")
 if not saved or saved[0] != input_id:

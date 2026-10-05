@@ -11,6 +11,8 @@
   evidence of search completion, not download/review/rehearsal completion.
 - Hard-coded pale app/metric backgrounds and dark headings conflicted with dark-mode
   text. Removed the custom color overrides; all surfaces now use native Streamlit themes.
+- The first contrast run also caught white text on Streamlit's default filled red
+  rehearsal button at 3.30:1. The action now uses the standard native button style.
 - The report table now shows before/after growth, highlights and ranks together instead
   of burying them among raw population columns.
 - Search queries now target dataset pages without forcing ISO3 codes and selected years
