@@ -51,14 +51,17 @@ jobs:
           done
           export AGENT_BROWSER_EXECUTABLE_PATH="$(command -v google-chrome)"
           agent-browser open http://127.0.0.1:8501
+          agent-browser set viewport 1440 1100
           agent-browser wait --text "Rehearse replacement"
           agent-browser snapshot -i > reports/browser/baseline.txt
           agent-browser screenshot reports/browser/baseline.png --full
           agent-browser find role button click --name "Rehearse replacement"
           agent-browser wait --text "Changes the report"
           agent-browser wait --text "Highlight flips"
+          agent-browser wait --text "Download HTML evidence"
           agent-browser eval 'if (document.querySelector("[data-testid=stException]")) throw new Error("Streamlit exception"); if (!document.body.innerText.includes("Highlight flips")) throw new Error("Missing result metrics");'
           agent-browser snapshot -i > reports/browser/result.txt
+          agent-browser eval 'Array.from(document.querySelectorAll("h2")).find(e => e.textContent.includes("3. Rehearsal result")).scrollIntoView({block:"start"});'
           agent-browser screenshot reports/browser/result.png --full
           agent-browser errors --json > reports/browser/errors.json
           python -c 'import json; data=json.load(open("reports/browser/errors.json")); assert data["success"] and not data["data"]["errors"], data'

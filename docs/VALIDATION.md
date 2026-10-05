@@ -16,8 +16,11 @@ PR #2 is merged at `97509de80ecb92bb0c6f4a4f21e6317956ebb6c0`.
 | Successful searches without IDs supplied candidates | Require a nonempty string search ID before caching/selecting results |
 | Nonstandard NaN/Infinity JSON could break strict exports | Reject non-finite JSON constants at network/publisher boundaries |
 
-- 94 tests pass locally on Python 3.12; Ruff lint and format checks pass. Concurrent
+- 95 tests pass locally on Python 3.12; Ruff lint and format checks pass. Concurrent
   unique queries cannot exceed the local attempt budget.
+- Uploaded CSV mapping/review is exercised through Streamlit AppTest with bytes supplied
+  at the upload boundary: missing metadata blocks the result, completed review passes,
+  and changing the unit multiplier invalidates the review and report.
 - All eight synthetic verdict controls pass. The threshold-flip CLI still shows exactly
   one changed highlight, zero rank changes, and zero beyond-tolerance values. It now
   compares nine report rows instead of six because first-year ranks are included.
@@ -26,7 +29,15 @@ PR #2 is merged at `97509de80ecb92bb0c6f4a4f21e6317956ebb6c0`.
 - The browser installer remains blocked locally by an UnknownIssuer certificate error.
   A CI browser job uses the runner's installed Chrome through pinned agent-browser 0.38.2,
   exercises the rendered offline workflow, and saves screenshots/errors as an artifact.
-  Its actual outcome must be recorded after the job runs; adding a job is not a pass.
+  Browser verification succeeded in run 37273133012 with zero page errors and console
+  messages. Both Python matrix jobs passed. Screenshots and accessibility snapshots were
+  inspected from the artifact. The final browser check also waits for evidence downloads
+  before capture and scrolls to the result so streamed charts/controls finish rendering.
+  Evidence: https://github.com/AaryaMody1301/SourceRehearsal/actions/runs/37273133012
+- Both real publisher downloads succeeded again in run 37272941245: nine scoped records
+  each, with only the expected human metadata-review hold. This checks download/coverage,
+  not an approved comparison or search-driven discovery.
+  Evidence: https://github.com/AaryaMody1301/SourceRehearsal/actions/runs/37272941245
 - Live SerpApi validation, real-data cross-publisher rehearsal, and the recording remain
   unverified. No credentials were configured or inferred. This audit does not establish
   that no undiscovered bugs exist.
