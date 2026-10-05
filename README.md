@@ -64,6 +64,10 @@ source-rehearsal --scenario "Threshold flip" --output reports/demo
 3. Review baseline metadata and the publisher's reuse terms.
 4. Choose **SerpApi discovery**, enter your key, and discover alternatives.
 5. Inspect search evidence. The baseline publisher is excluded from replacement choices.
+   The result table explains baseline exclusions, duplicates, and unsupported sources.
+   Download discovery JSON even when no replacement is found; it preserves queries,
+   search IDs, errors, cache labels, and the local attempt ledger. Changing the baseline
+   hides searches made for the previous baseline; discover again for the new source.
    The MVP automatically downloads only results identifying
    World Bank `SP.POP.TOTL` or OWID `population-unwpp`. Other results remain in the evidence.
 6. Select a replacement, download it, and review its metadata before running the rehearsal.
@@ -82,6 +86,21 @@ This downloads real IND/USA/BRA population data for 2020–2022 and records sour
 metadata, and validation holds. It does not approve metadata or test SerpApi discovery.
 The same non-blocking check runs on branch pushes in CI; inspect that step's actual status
 and logs, because an unavailable publisher does not fail the deterministic test jobs.
+
+To verify real SerpApi discovery and download any supported alternative, set
+`SERPAPI_API_KEY` in your shell and run:
+
+```bash
+source-rehearsal --check-discovery --output reports/live-discovery
+```
+
+This uses the same IND/USA/BRA 2020–2022 contract, excludes World Bank as the baseline,
+and saves sanitized discovery/download evidence. It shares the app's cache and 200-attempt
+guard. Exit 1 means a search error, no supported alternative, or a failed download; exit 2
+means missing configuration. Exit 0 verifies search and download completion only, not
+metadata approval, complete coverage, or a report verdict. Inspect the recorded checks,
+then complete metadata review and rehearsal in the app. Do not paste your key into chat
+or include it in a demo recording.
 
 ## Results
 
@@ -103,7 +122,8 @@ The app needs no paid runtime LLM or hosted database. ChatGPT/Codex can assist d
 calculation and verification are deterministic Python/DuckDB operations.
 
 Discovery uses at most three SerpApi calls per run and a 24-hour local cache. Its SQLite
-ledger conservatively caps uncached attempts at 200, including failures. This is a local
+ledger usage is visible in the discovery panel; cache hits do not increment it.
+The ledger conservatively caps uncached attempts at 200, including failures. This is a local
 guard, **not** your account's billing-cycle balance. It cannot see calls made elsewhere.
 Check your SerpApi dashboard before using it. After reviewing a new billing cycle, deleting
 `.cache/search.sqlite` resets the local ledger and cache. No automatic paid upgrade occurs.

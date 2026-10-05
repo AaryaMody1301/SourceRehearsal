@@ -59,11 +59,21 @@ Synthetic tests do not count as evidence of performance on real source replaceme
 
 ## Delivery order and remaining external validation
 
-Implement all MVP modules in one reviewable branch and one PR. Tests run without paid
-services. Live publisher/API and SerpApi validation must be reported separately from mocked
-tests; a missing key or unavailable network never counts as a passed live check. Finish the
-first working local implementation now; reserve October 4–8 for real-data evaluation and
-iteration, October 9 for the recording, and October 10 for submission.
+Build phase-wise and deliver one reviewable PR per phase: **three planned PRs total**.
+The five acceptance milestones above describe functionality, not five separate PRs.
+
+| Phase / PR | Scope | Acceptance / status |
+| --- | --- | --- |
+| 1 — MVP | Contract engine, discovery/adapters, interface, evidence, CI | PR #1 merged October 3; 63 tests and real publisher downloads verified |
+| 2 — Live-workflow readiness | Search diagnostics, local budget visibility, discovery exports, repeatable live-check command, stale-baseline fix | Deterministic regressions and browser checks; owner-run SerpApi check recorded separately |
+| 3 — Submission preparation | Real-data evaluation, final fixes, demo walkthrough, limitations and AI disclosure | Reviewed real-data evidence, public repo, owner-recorded video under three minutes, submission |
+
+Tests run without paid services. Live publisher/API and SerpApi validation are reported
+separately from mocked tests; a missing key or unavailable network never counts as a pass.
+No new database, runtime LLM, or indicator expansion is planned. Additional PRs are only
+for a concrete defect or requested scope change, not per file or minor feature.
+Target October 4–8 for owner-run validation and evaluation, October 9 for recording,
+and October 10 for submission. Recheck official rules before relying on the schedule.
 
 ## Primary references
 

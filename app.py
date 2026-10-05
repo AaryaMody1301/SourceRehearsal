@@ -185,21 +185,49 @@ with right:
         candidate = upload_dataset("Replacement")
     else:
         st.write("Search for public total population datasets matching this contract.")
+        baseline_url = baseline.metadata.source_url if baseline else ""
+        discovery_id = fingerprint([scope_id, baseline_mode, baseline_url])
+        client = SearchClient(key, Path(".cache/search.sqlite")) if key.strip() else None
         if st.button("Discover alternatives", disabled=not key.strip()):
+            st.session_state.pop("discovery", None)
+            st.session_state.pop("live_candidate", None)
+            st.session_state.pop("report", None)
             with st.spinner("Searching up to three queries…"):
-                client = SearchClient(key, Path(".cache/search.sqlite"))
-                result = client.discover(contract, baseline.metadata.source_url if baseline else "")
-                st.session_state["discovery"] = (scope_id, result)
-                st.session_state.pop("live_candidate", None)
+                result = client.discover(contract, baseline_url)
+                st.session_state["discovery"] = (discovery_id, result)
+        if client:
+            usage = client.usage()
+            st.caption(
+                f"Local search guard: {usage['attempts']}/{usage['limit']} uncached attempts used; "
+                f"{usage['remaining']} remaining. Not your account balance. "
+                "At most 3 new attempts per run; cached queries need none."
+            )
         if not key.strip():
             st.info("Enter your SerpApi key in the sidebar to enable live discovery.")
         saved = st.session_state.get("discovery")
-        if saved and saved[0] == scope_id:
+        if saved and saved[0] == discovery_id:
             discovery = saved[1]
+            cached_count = sum(search["cached"] for search in discovery["searches"])
+            st.caption(
+                f"{len(discovery['searches'])} completed queries · "
+                f"{cached_count} local cache hits · "
+                f"{len(discovery['errors'])} errors · {len(discovery['candidates'])} candidates"
+            )
             for error in discovery["errors"]:
                 st.warning(error["error"])
+            if discovery["diagnostics"]:
+                with st.expander("Why results were selected or skipped"):
+                    st.dataframe(pd.DataFrame(discovery["diagnostics"]), hide_index=True)
             with st.expander("Search evidence, including unsupported results"):
                 st.json(discovery)
+            st.download_button(
+                "Download discovery evidence",
+                to_json(
+                    {"contract": asdict(contract), "baseline_source": baseline_url, **discovery}
+                ),
+                "source-discovery.json",
+                "application/json",
+            )
             found = discovery["candidates"]
             if found:
                 selected = st.selectbox(
@@ -218,6 +246,8 @@ with right:
                         with st.spinner("Downloading data and metadata…"):
                             loaded = download(chosen, contract)
                             loaded.evidence["searches"] = discovery["searches"]
+                            loaded.evidence["search_diagnostics"] = discovery["diagnostics"]
+                            loaded.evidence["search_errors"] = discovery["errors"]
                             st.session_state["live_candidate"] = (choice_id, loaded)
                     except ValueError as exc:
                         st.error(str(exc))
