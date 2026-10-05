@@ -74,8 +74,12 @@ def to_html(report: dict) -> str:
                 {
                     "Country": row["country"],
                     "Year": row["year"],
-                    "Growth before (%)": round(row["growth_pct_baseline"], 6),
-                    "Growth after (%)": round(row["growth_pct_candidate"], 6),
+                    "Growth before (%)": round(row["growth_pct_baseline"], 6)
+                    if row["growth_pct_baseline"] is not None
+                    else "Unavailable",
+                    "Growth after (%)": round(row["growth_pct_candidate"], 6)
+                    if row["growth_pct_candidate"] is not None
+                    else "Unavailable",
                     "Highlighted before": row["highlighted_baseline"],
                     "Highlighted after": row["highlighted_candidate"],
                     "Rank before": row["population_rank_baseline"],

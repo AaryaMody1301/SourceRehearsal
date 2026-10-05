@@ -21,6 +21,8 @@ source migration has never existed. No result establishes truth or universal equ
   sources remain visible for manual follow-up. Fixed HTTPS hosts, no arbitrary URL fetches.
 - DuckDB: fixed parameterized report SQL. Annual growth joins exactly year minus one;
   deterministic ranks and threshold decisions evaluated for the same country/year scope.
+  All selected years participate in ranking. The first year's growth is unavailable;
+  it is never silently converted into zero growth or highlighted.
 - Evidence: complete contract, retrieval times, file hashes, reviewed metadata, search IDs,
   transforms, missing keys, value deltas, growth deltas, rank shifts, flag flips, caveats.
 - Local SQLite search cache: 24-hour TTL, no secrets, conservative 200-attempt budget per
@@ -59,13 +61,17 @@ Synthetic tests do not count as evidence of performance on real source replaceme
 
 ## Delivery order and remaining external validation
 
-Build phase-wise and deliver one reviewable PR per phase: **three planned PRs total**.
+Build phase-wise and deliver one reviewable PR per phase: **three implementation phases**.
+An additional audit-fix PR precedes the final submission PR because confirmed defects were
+found after phase 2 was merged. Expected delivery is now four PRs: #1 MVP, #2 readiness,
+#3 audit fixes, and #4 submission preparation.
 The five acceptance milestones above describe functionality, not five separate PRs.
 
 | Phase / PR | Scope | Acceptance / status |
 | --- | --- | --- |
 | 1 — MVP | Contract engine, discovery/adapters, interface, evidence, CI | PR #1 merged October 3; 63 tests and real publisher downloads verified |
-| 2 — Live-workflow readiness | Search diagnostics, local budget visibility, discovery exports, repeatable live-check command, stale-baseline fix | Deterministic regressions and browser checks; owner-run SerpApi check recorded separately |
+| 2 — Live-workflow readiness | Search diagnostics, local budget visibility, discovery exports, repeatable live-check command, stale-baseline fix | PR #2 merged; 70 tests; live SerpApi check still pending |
+| Audit fixes | First-year ranking, strict source/API validation, cache handling, theme readability, discovery refresh and diagnostics | PR #3; 96 tests; light/dark Chrome and contrast checks passed; revised live queries await owner rerun |
 | 3 — Submission preparation | Real-data evaluation, final fixes, demo walkthrough, limitations and AI disclosure | Reviewed real-data evidence, public repo, owner-recorded video under three minutes, submission |
 
 Tests run without paid services. Live publisher/API and SerpApi validation are reported

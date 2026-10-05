@@ -7,7 +7,7 @@ import pandas as pd
 from .discovery import Candidate, recognize
 from .ingest import csv_dataset, read_csv, timestamp
 from .models import MAX_BYTES, Contract, Dataset, Mapping, Metadata
-from .network import HttpClient, NetworkError
+from .network import HttpClient, NetworkError, reject_nonfinite
 
 WB_LICENSE = "https://datacatalog.worldbank.org/int/public-licenses#cc-by"
 
@@ -46,9 +46,16 @@ def world_bank(contract: Contract, http: HttpClient) -> Dataset:
         if sum(map(len, raw_pages)) > MAX_BYTES:
             raise NetworkError("World Bank combined responses exceed 10 MB.")
         try:
-            payload = json.loads(raw)
+            payload = json.loads(raw, parse_constant=reject_nonfinite)
             header, values = payload
             if not isinstance(header, dict) or not isinstance(values, list):
+                raise ValueError
+            if any(
+                type(header.get(field)) not in (int, str)
+                or not str(header[field]).isascii()
+                or not str(header[field]).isdigit()
+                for field in ("page", "pages", "total")
+            ):
                 raise ValueError
             if pages is None:
                 pages, total = int(header["pages"]), int(header["total"])
@@ -64,6 +71,11 @@ def world_bank(contract: Contract, http: HttpClient) -> Dataset:
                     or not isinstance(row.get("indicator"), dict)
                     or row["indicator"].get("id") != "SP.POP.TOTL"
                     or not isinstance(row.get("countryiso3code"), str)
+                    or not isinstance(row.get("date"), str)
+                    or len(row["date"]) != 4
+                    or not row["date"].isascii()
+                    or not row["date"].isdigit()
+                    or isinstance(row.get("value"), bool)
                 ):
                     raise ValueError
                 rows.append(

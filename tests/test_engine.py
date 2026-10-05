@@ -47,7 +47,7 @@ def test_threshold_boundary_is_not_highlighted():
 def test_missing_predecessor_never_becomes_two_year_growth():
     data = demo.candidate("Missing year")
     rows = replay(data, demo.demo_contract())
-    assert rows[rows.country == "IND"].empty
+    assert rows[rows.country == "IND"].growth_pct.isna().all()
     assert compare(demo.baseline(), data, demo.demo_contract())["report_rows"] == []
 
 
@@ -179,4 +179,43 @@ def test_noninteger_year_fails():
     data = demo.baseline()
     data.frame = data.frame.astype({"year": float})
     data.frame.loc[0, "year"] = 2020.5
+    assert compare(data, data, demo.demo_contract())["verdict"] == "Insufficient evidence"
+
+
+def test_first_year_rank_change_cannot_pass_and_exports_without_growth():
+    baseline = csv_dataset(
+        b"country,year,population\nIND,2020,1000\nUSA,2020,1001\nIND,2021,1010\nUSA,2021,1020\n",
+        Mapping(),
+        demo.demo_metadata(),
+    )
+    candidate = csv_dataset(
+        b"country,year,population\nIND,2020,1002\nUSA,2020,1001\nIND,2021,1010\nUSA,2021,1020\n",
+        Mapping(),
+        demo.demo_metadata(),
+    )
+    result = compare(baseline, candidate, Contract(("IND", "USA"), 2020, 2021, threshold_pct=99))
+    assert result["verdict"] == "Changes the report"
+    assert result["summary"]["rank_changes"] == 2
+    assert result["summary"]["values_exceeding_tolerance"] == 0
+    assert result["summary"]["decision_rows"] == 4
+    first_year = [row for row in result["report_rows"] if row["year"] == 2020]
+    assert all(
+        row["growth_pct_baseline"] is None and not row["highlighted_baseline"] for row in first_year
+    )
+    assert "Unavailable" in to_html(result)
+    assert json.loads(to_json(result))["format_version"] == "1.1"
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://",
+        "https://user:pass@example.com/data",
+        "https://example.com:bad/data",
+        "https://bad host/data",
+    ],
+)
+def test_malformed_uploaded_source_references_cannot_pass(url):
+    data = demo.baseline()
+    data.metadata = replace(data.metadata, synthetic=False, source_url=url)
     assert compare(data, data, demo.demo_contract())["verdict"] == "Insufficient evidence"

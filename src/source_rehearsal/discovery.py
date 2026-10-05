@@ -1,6 +1,7 @@
 import json
 import sqlite3
 import time
+from contextlib import closing, contextmanager
 from dataclasses import asdict, dataclass
 from hashlib import sha256
 from pathlib import Path
@@ -45,12 +46,12 @@ def recognize(link: str) -> tuple[str, str] | None:
     return None
 
 
-def queries(contract: Contract) -> list[str]:
-    scope = " ".join(contract.countries)
+def queries() -> list[str]:
+    # Dataset pages span countries/years; validate the selected scope after download.
     return [
-        f"population total annual {scope} {contract.start_year} {contract.end_year} dataset",
-        "site:data.worldbank.org/indicator/SP.POP.TOTL population total",
-        "site:ourworldindata.org/grapher/population-unwpp population estimates data",
+        '"total population" annual country dataset',
+        'site:data.worldbank.org "Population, total" "SP.POP.TOTL"',
+        "site:ourworldindata.org/grapher population",
     ]
 
 
@@ -60,29 +61,41 @@ class SearchClient:
         self.cache = Path(cache)
         self.http = http or HttpClient()
         self.budget = budget
-        self.cache.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            self.cache.parent.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            raise NetworkError(
+                "Local search cache folder is unavailable or not writable."
+            ) from None
         with self.connection() as db:
             db.execute(
                 "CREATE TABLE IF NOT EXISTS cache (key TEXT PRIMARY KEY, at REAL, data TEXT)"
             )
             db.execute("CREATE TABLE IF NOT EXISTS attempts (at REAL)")
 
+    @contextmanager
     def connection(self):
-        return sqlite3.connect(self.cache, timeout=10)
+        try:
+            with closing(sqlite3.connect(self.cache, timeout=10)) as db, db:
+                yield db
+        except sqlite3.Error:
+            raise NetworkError(
+                "Local search cache is unavailable or invalid. Check the .cache folder."
+            ) from None
 
     def usage(self) -> dict:
         with self.connection() as db:
             used = db.execute("SELECT COUNT(*) FROM attempts").fetchone()[0]
         return {"attempts": used, "limit": self.budget, "remaining": max(0, self.budget - used)}
 
-    def search(self, query: str) -> dict:
+    def search(self, query: str, *, refresh: bool = False) -> dict:
         if not self.api_key:
             raise NetworkError("Configure a SerpApi key to run live discovery.")
         key = sha256(("google/en/" + query).encode()).hexdigest()
         with self.connection() as db:
             db.execute("BEGIN IMMEDIATE")
             cached = db.execute("SELECT at, data FROM cache WHERE key=?", [key]).fetchone()
-            if cached and time.time() - cached[0] < 24 * 60 * 60:
+            if not refresh and cached and time.time() - cached[0] < 24 * 60 * 60:
                 return {**json.loads(cached[1]), "cached": True}
             used = db.execute("SELECT COUNT(*) FROM attempts").fetchone()[0]
             if used >= self.budget:
@@ -96,7 +109,7 @@ class SearchClient:
                 "q": query,
                 "api_key": self.api_key,
                 "hl": "en",
-                "num": 10,
+                **({"no_cache": "true"} if refresh else {}),
             }
         )
         response = self.http.json(url)
@@ -119,6 +132,8 @@ class SearchClient:
             raise NetworkError(
                 "SerpApi returned an incomplete search. No candidates were inferred."
             )
+        if not isinstance(metadata.get("id"), str) or not metadata["id"].strip():
+            raise NetworkError("SerpApi search evidence is missing a valid search ID.")
         # Persist and export only the necessary evidence, never full responses or API keys.
         organic = response.get("organic_results", [])
         if not isinstance(organic, list):
@@ -143,13 +158,13 @@ class SearchClient:
             )
         return {**data, "cached": False}
 
-    def discover(self, contract: Contract, exclude_url: str = "") -> dict:
+    def discover(self, contract: Contract, exclude_url: str = "", *, refresh: bool = False) -> dict:
         candidates, evidence, errors, diagnostics = [], [], [], []
         excluded = recognize(exclude_url)
         seen = set()
-        for query in queries(contract):
+        for query in queries():
             try:
-                result = self.search(query)
+                result = self.search(query, refresh=refresh)
             except NetworkError as exc:
                 errors.append({"query": query, "error": str(exc)})
                 continue

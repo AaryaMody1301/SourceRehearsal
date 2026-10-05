@@ -1,6 +1,7 @@
 import math
 from dataclasses import asdict
 from itertools import product
+from urllib.parse import urlsplit
 
 import duckdb
 import pandas as pd
@@ -40,8 +41,20 @@ def checks(dataset: Dataset, contract: Contract) -> list[str]:
             errors.append(f"Metadata {field} does not match the contract: {getattr(meta, field)}.")
     if not meta.definition.strip():
         errors.append("The indicator definition is undocumented.")
-    if not meta.source_url.startswith("https://") and not meta.synthetic:
-        errors.append("A public HTTPS source reference is required.")
+    try:
+        source = urlsplit(meta.source_url)
+        valid_source = (
+            source.scheme == "https"
+            and bool(source.hostname)
+            and source.username is None
+            and source.password is None
+            and source.port != 0
+            and not any(c.isspace() for c in meta.source_url)
+        )
+    except ValueError:
+        valid_source = False
+    if not valid_source and not meta.synthetic:
+        errors.append("A valid HTTPS source reference without embedded credentials is required.")
     if meta.license.strip().lower() in ("", "unknown", "unspecified"):
         errors.append("Source license is undocumented; review the publisher's terms.")
     if not meta.reviewed:
@@ -65,10 +78,10 @@ def replay(dataset: Dataset, contract: Contract) -> pd.DataFrame:
               SELECT current.country, current.year, current.population,
                 100.0 * (current.population / previous.population - 1) AS growth_pct
               FROM population_data current
-              JOIN population_data previous
+              LEFT JOIN population_data previous
                 ON current.country = previous.country AND current.year = previous.year + 1
             )
-            SELECT *, growth_pct > ? AS highlighted,
+            SELECT *, COALESCE(growth_pct > ?, FALSE) AS highlighted,
               RANK() OVER (PARTITION BY year ORDER BY population DESC) AS population_rank
             FROM growth ORDER BY year, country
             """,
@@ -97,7 +110,7 @@ def describe(dataset: Dataset) -> dict:
 def compare(baseline: Dataset, candidate: Dataset, contract: Contract) -> dict:
     problems = {"baseline": checks(baseline, contract), "candidate": checks(candidate, contract)}
     report = {
-        "format_version": "1.0",
+        "format_version": "1.1",
         "generated_at": timestamp(),
         "contract": asdict(contract),
         "baseline": describe(baseline),

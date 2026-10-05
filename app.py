@@ -1,4 +1,4 @@
-"""Run with: streamlit run app.py"""
+"""Install with python -m pip install -e .; run with python -m streamlit run app.py."""
 
 import json
 import os
@@ -20,10 +20,7 @@ from source_rehearsal.publishers import download, world_bank
 
 st.set_page_config(page_title="SourceRehearsal", page_icon="🔁", layout="wide")
 st.markdown(
-    """<style>
-.stApp {background: #f8faf6;} h1,h2,h3 {color: #174b3c;}
-div[data-testid="stMetric"] {background: #eef3eb; padding: 18px; border-radius: 12px;}
-</style>""",
+    '<style>[data-testid="stCaptionContainer"] {opacity: 1;}</style>',
     unsafe_allow_html=True,
 )
 st.title("SourceRehearsal")
@@ -185,18 +182,40 @@ with right:
         candidate = upload_dataset("Replacement")
     else:
         st.write("Search for public total population datasets matching this contract.")
+        st.caption(
+            "Automatic downloads support World Bank total population and OWID Population. "
+            "Country/year coverage is checked after download; the baseline source is excluded."
+        )
         baseline_url = baseline.metadata.source_url if baseline else ""
         discovery_id = fingerprint([scope_id, baseline_mode, baseline_url])
-        client = SearchClient(key, Path(".cache/search.sqlite")) if key.strip() else None
-        if st.button("Discover alternatives", disabled=not key.strip()):
+        client, usage = None, None
+        if key.strip():
+            try:
+                client = SearchClient(key, Path(".cache/search.sqlite"))
+                usage = client.usage()
+            except ValueError as exc:
+                client = None
+                st.error(str(exc))
+        refresh_search = st.checkbox(
+            "Refresh cached searches",
+            disabled=client is None,
+            help=(
+                "Bypass local and SerpApi caches. Uses up to 3 new search attempts "
+                "and may use credits."
+            ),
+        )
+        if st.button("Discover alternatives", disabled=client is None):
             st.session_state.pop("discovery", None)
             st.session_state.pop("live_candidate", None)
             st.session_state.pop("report", None)
             with st.spinner("Searching up to three queries…"):
-                result = client.discover(contract, baseline_url)
-                st.session_state["discovery"] = (discovery_id, result)
+                try:
+                    result = client.discover(contract, baseline_url, refresh=refresh_search)
+                    usage = result["local_budget"]
+                    st.session_state["discovery"] = (discovery_id, result)
+                except ValueError as exc:
+                    st.error(str(exc))
         if client:
-            usage = client.usage()
             st.caption(
                 f"Local search guard: {usage['attempts']}/{usage['limit']} uncached attempts used; "
                 f"{usage['remaining']} remaining. Not your account balance. "
@@ -216,6 +235,13 @@ with right:
             for error in discovery["errors"]:
                 st.warning(error["error"])
             if discovery["diagnostics"]:
+                skipped = discovery["diagnostics"]
+                st.caption(
+                    f"{sum(d['reason'] == 'Baseline source excluded' for d in skipped)} "
+                    "baseline results excluded · "
+                    f"{sum(d['reason'] == 'Unsupported source or indicator' for d in skipped)} "
+                    "unsupported results"
+                )
                 with st.expander("Why results were selected or skipped"):
                     st.dataframe(pd.DataFrame(discovery["diagnostics"]), hide_index=True)
             with st.expander("Search evidence, including unsupported results"):
@@ -258,7 +284,9 @@ with right:
             else:
                 st.info(
                     "No supported alternative source found. The baseline source is excluded; "
-                    "search evidence is available above."
+                    "search evidence is available above. You can upload a CSV and review its "
+                    "metadata, or enable Refresh cached searches to try fresh results. "
+                    "A refresh may use credits and does not guarantee a replacement."
                 )
 
 st.divider()
@@ -279,7 +307,7 @@ input_id = fingerprint(
         "cevidence": candidate.evidence,
     }
 )
-if st.button("Rehearse replacement", type="primary"):
+if st.button("Rehearse replacement"):
     st.session_state["report"] = (input_id, compare(baseline, candidate, contract))
 saved = st.session_state.get("report")
 if not saved or saved[0] != input_id:
@@ -315,10 +343,46 @@ else:
     decisions = pd.DataFrame(report["report_rows"])
     st.subheader("Changes to the report")
     changed = decisions[decisions.flag_changed | decisions.rank_changed]
-    st.dataframe(changed if not changed.empty else decisions, hide_index=True)
+    displayed = changed if not changed.empty else decisions
+    st.dataframe(
+        displayed[
+            [
+                "country",
+                "year",
+                "growth_pct_baseline",
+                "growth_pct_candidate",
+                "highlighted_baseline",
+                "highlighted_candidate",
+                "population_rank_baseline",
+                "population_rank_candidate",
+            ]
+        ].rename(
+            columns={
+                "country": "Country",
+                "year": "Year",
+                "growth_pct_baseline": "Growth before (%)",
+                "growth_pct_candidate": "Growth after (%)",
+                "highlighted_baseline": "Highlighted before",
+                "highlighted_candidate": "Highlighted after",
+                "population_rank_baseline": "Rank before",
+                "population_rank_candidate": "Rank after",
+            }
+        ),
+        hide_index=True,
+    )
     chart = decisions.copy()
     chart["label"] = chart.country + " / " + chart.year.astype(str)
-    st.bar_chart(chart.set_index("label")[["growth_pct_baseline", "growth_pct_candidate"]])
+    st.bar_chart(
+        chart.set_index("label")[["growth_pct_baseline", "growth_pct_candidate"]].rename(
+            columns={"growth_pct_baseline": "Baseline", "growth_pct_candidate": "Replacement"}
+        ),
+        stack=False,
+        y_label="Annual growth (%)",
+    )
+    st.caption(
+        "Ranks cover every selected year. First-year growth is unavailable without a prior "
+        "year in the contract and is not highlighted."
+    )
     with st.expander("All population values and differences"):
         st.dataframe(pd.DataFrame(report["values"]), hide_index=True)
 

@@ -19,6 +19,20 @@ def test_live_check_requires_environment_key_before_network(monkeypatch, tmp_pat
     assert not (tmp_path / ".cache").exists()
 
 
+def test_live_check_reports_corrupt_cache_without_a_traceback(monkeypatch, tmp_path, capsys):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("SERPAPI_API_KEY", "fixture-secret")
+    monkeypatch.setattr(sys, "argv", ["source-rehearsal", "--check-discovery"])
+    (tmp_path / ".cache").mkdir()
+    (tmp_path / ".cache/search.sqlite").write_bytes(b"not SQLite")
+    with pytest.raises(SystemExit) as error:
+        cli.main()
+    assert error.value.code == 1
+    output = capsys.readouterr().err
+    assert "cache is unavailable or invalid" in output
+    assert "fixture-secret" not in output
+
+
 @pytest.mark.parametrize("outcome", ["download", "empty", "search-error", "download-error"])
 def test_discovery_check_exports_evidence_without_approving_metadata(
     monkeypatch, tmp_path, capsys, outcome

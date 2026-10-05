@@ -29,6 +29,8 @@ Activate the environment:
 source .venv/bin/activate
 # Windows PowerShell
 .venv\Scripts\Activate.ps1
+# Windows Command Prompt
+.venv\Scripts\activate.bat
 ```
 
 ```bash
@@ -39,6 +41,10 @@ python -m streamlit run app.py
 The sidebar password field accepts your SerpApi key. Alternatively set `SERPAPI_API_KEY`
 in the shell before launch. `.env.example` is documentation; `.env` is not automatically
 loaded. Never commit your key. It is not included in caches or exported evidence.
+
+Light and dark modes use Streamlit's native theme throughout the app. Change the theme
+in the app's settings menu. The result table places before/after growth, highlights and
+ranks together; all population values remain available in the expanded evidence table.
 
 ## Try the synthetic example (no API key)
 
@@ -68,6 +74,12 @@ source-rehearsal --scenario "Threshold flip" --output reports/demo
    Download discovery JSON even when no replacement is found; it preserves queries,
    search IDs, errors, cache labels, and the local attempt ledger. Changing the baseline
    hides searches made for the previous baseline; discover again for the new source.
+   Queries find dataset pages; selected countries/years are validated after download.
+   The UI counts excluded baseline and unsupported results. If results are stale, enable
+   **Refresh cached searches** before discovery to bypass both local and SerpApi caches.
+   This reserves up to three new attempts, may consume credits, and never resets the ledger.
+   A successful search with no supported alternative is not a completed live workflow;
+   refresh does not guarantee a match. CSV upload remains available with metadata review.
    The MVP automatically downloads only results identifying
    World Bank `SP.POP.TOTL` or OWID `population-unwpp`. Other results remain in the evidence.
 6. Select a replacement, download it, and review its metadata before running the rehearsal.
@@ -96,7 +108,7 @@ source-rehearsal --check-discovery --output reports/live-discovery
 
 This uses the same IND/USA/BRA 2020–2022 contract, excludes World Bank as the baseline,
 and saves sanitized discovery/download evidence. It shares the app's cache and 200-attempt
-guard. Exit 1 means a search error, no supported alternative, or a failed download; exit 2
+guard. Exit 1 means a search/cache error, no supported alternative, or a failed download; exit 2
 means missing configuration. Exit 0 verifies search and download completion only, not
 metadata approval, complete coverage, or a report verdict. Inspect the recorded checks,
 then complete metadata review and rehearsal in the app. Do not paste your key into chat
@@ -111,10 +123,14 @@ or include it in a demo recording.
 | Exceeds value tolerance | Decisions are unchanged but values exceed your allowed difference |
 | Passes stated checks | Required checks, value tolerance, ranks, and flags pass for this scope |
 
-Annual growth uses the exact preceding calendar year. Rank ties share a rank. Floating
+Ranks cover **every selected year**, including the first. Annual growth uses the exact
+preceding calendar year within the contract; first-year growth is unavailable and is not
+highlighted. JSON evidence version 1.1 includes first-year rows with null growth fields.
+Rank ties share a rank. Floating
 point comparisons use a 1e-9 percentage-point margin at the threshold/tolerance boundary.
 No passing result proves semantic equivalence or future stability. Full required coverage
 is checked, rather than only the overlapping rows.
+Growth bars compare baseline and replacement side by side; their heights are not added.
 
 ## Cost and limits
 
@@ -131,7 +147,9 @@ Check your SerpApi dashboard before using it. After reviewing a new billing cycl
 Limits: 20 countries, 30 years, 10 MB per response/upload, 100,000 rows. CSV uploads are
 not sent to SerpApi; queries use only the country codes, year range, and public indicator.
 Dataset downloads use fixed HTTPS publisher hosts and do not follow redirects. Uploaded
-source URLs are evidence references and are never fetched automatically.
+source URLs must be valid HTTPS references without embedded credentials; they are never
+fetched automatically. Valid syntax does not establish public accessibility or authenticity.
+Country identifiers are checked for three-letter syntax, not against a complete ISO registry.
 CSV headers must be unique and each row must match the header's field count. Quoted commas
 and newlines are supported. Failed refreshes clear the prior download and its report.
 
@@ -147,6 +165,11 @@ Tests exercise report behavior, metadata holds, complete pagination, caching/bud
 source recognition, HTML escaping, and Streamlit interactions. Network tests use fixtures;
 passing them is **not** a claim of successful live API validation. Record actual live search
 and publisher outcomes separately in [docs/VALIDATION.md](docs/VALIDATION.md).
+CI also opens the app in Chrome through pinned `agent-browser`, runs the offline rehearsal
+in both native themes, and checks page errors and sampled rendered text contrast.
+Screenshots, snapshots and contrast reports are saved in `browser-evidence-light` and
+`browser-evidence-dark` artifacts. Caption opacity is adjusted for readable guidance text.
+This browser check uses synthetic inputs and does not validate live SerpApi discovery.
 
 See [the implementation plan](docs/IMPLEMENTATION_PLAN.md) for milestones and boundaries.
 

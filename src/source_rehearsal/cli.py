@@ -7,7 +7,7 @@ from . import demo
 from .discovery import Candidate, SearchClient
 from .engine import checks, compare, describe
 from .evidence import to_html, to_json
-from .network import HttpClient
+from .network import HttpClient, NetworkError
 from .publishers import download, our_world_in_data, world_bank
 
 
@@ -37,10 +37,16 @@ def main():
             )
         contract = demo.demo_contract()
         baseline_url = "https://data.worldbank.org/indicator/SP.POP.TOTL"
+        try:
+            discovery = SearchClient(key, Path(".cache/search.sqlite")).discover(
+                contract, baseline_url
+            )
+        except NetworkError as exc:
+            parser.exit(1, str(exc) + "\n")
         result = {
             "contract": asdict(contract),
             "baseline_source": baseline_url,
-            **SearchClient(key, Path(".cache/search.sqlite")).discover(contract, baseline_url),
+            **discovery,
         }
         results = []
         for candidate in result["candidates"]:
