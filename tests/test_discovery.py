@@ -63,6 +63,21 @@ def test_zero_results_never_invents_candidates(tmp_path):
     assert result["errors"] == []
 
 
+def test_refresh_bypasses_both_caches_and_keeps_the_attempt_budget(tmp_path):
+    fixture = SearchFixture(empty=True)
+    client = SearchClient("key", tmp_path / "cache.sqlite", fixture, budget=6)
+    assert not client.discover(demo_contract())["candidates"]
+    fixture.empty = False
+    result = client.discover(demo_contract(), refresh=True)
+    assert len(result["candidates"]) == 2
+    assert len(fixture.calls) == result["local_budget"]["attempts"] == 6
+    assert all(not row["cached"] for row in result["searches"])
+    assert all(parse_qs(urlsplit(url).query)["no_cache"] == ["true"] for url in fixture.calls[3:])
+    assert all(row["cached"] for row in client.discover(demo_contract())["searches"])
+    assert len(client.discover(demo_contract(), refresh=True)["errors"]) == 3
+    assert len(fixture.calls) == 6
+
+
 def test_baseline_publisher_is_excluded_but_search_evidence_is_kept(tmp_path):
     result = SearchClient("key", tmp_path / "cache.sqlite", SearchFixture()).discover(
         demo_contract(), "https://data.worldbank.org/indicator/SP.POP.TOTL?locations=IN"

@@ -29,6 +29,9 @@ jobs:
   browser:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    strategy:
+      matrix:
+        theme: ['light', 'dark']
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -44,7 +47,7 @@ jobs:
           SERPAPI_API_KEY: ''
         run: |
           mkdir -p reports/browser
-          python -m streamlit run app.py --server.headless=true --server.port=8501 --browser.gatherUsageStats=false > reports/browser/server.log 2>&1 &
+          python -m streamlit run app.py --server.headless=true --server.port=8501 --browser.gatherUsageStats=false --theme.base=${{ matrix.theme }} > reports/browser/server.log 2>&1 &
           for attempt in {1..30}; do
             if curl --silent --fail http://127.0.0.1:8501/_stcore/health > /dev/null; then break; fi
             sleep 1
@@ -63,6 +66,7 @@ jobs:
           agent-browser snapshot -i > reports/browser/result.txt
           agent-browser eval 'Array.from(document.querySelectorAll("h2")).find(e => e.textContent.includes("3. Rehearsal result")).scrollIntoView({block:"start"});'
           agent-browser screenshot reports/browser/result.png --full
+          agent-browser eval --stdin < tests/browser_contrast.js > reports/browser/contrast.json
           agent-browser errors --json > reports/browser/errors.json
           python -c 'import json; data=json.load(open("reports/browser/errors.json")); assert data["success"] and not data["data"]["errors"], data'
           agent-browser console --json > reports/browser/console.json
@@ -70,5 +74,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: browser-evidence
+          name: browser-evidence-${{ matrix.theme }}
           path: reports/browser/

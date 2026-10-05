@@ -2,6 +2,31 @@
 
 ## Pre-submission audit
 
+### Owner live result and theme follow-up
+
+- The owner-provided source-discovery.json contains three completed searches with IDs,
+  no reported API errors, and 29 organic results: nine excluded World Bank baseline
+  results and 20 unsupported results. All three exports were local cache hits; the ledger
+  records three uncached attempts. No supported OWID replacement was returned. This is
+  evidence of search completion, not download/review/rehearsal completion.
+- Hard-coded pale app/metric backgrounds and dark headings conflicted with dark-mode
+  text. Removed the custom color overrides; all surfaces now use native Streamlit themes.
+- The report table now shows before/after growth, highlights and ranks together instead
+  of burying them among raw population columns.
+- Search queries now target dataset pages without forcing ISO3 codes and selected years
+  into indexing terms or restricting site searches to one exact URL. Downloaded coverage
+  still has to match the contract. New query strings bypass the old query cache entries.
+- Optional Refresh cached searches bypasses both caches using SerpApi's documented
+  no_cache parameter. It reserves new attempts within the existing ledger and budget;
+  a regression verifies fresh results, subsequent cache reuse and budget exhaustion.
+- Local suite: 96 passing tests, including refresh and actionable no-candidate UI checks.
+  CI now verifies both native light and dark modes, captures screenshots and checks actual
+  foreground/background contrast for visible text, labels, controls and result metrics.
+  Final theme screenshots/contrast results are pending verification for this follow-up.
+- The revised live queries and a reviewed real-data comparison require an owner rerun.
+  The uploaded evidence contains no supported replacement or report verdict. No key was
+  configured in this execution, and no live success is inferred from fixtures/web search.
+
 The audit reviewed every application module and test file against README.md,
 IMPLEMENTATION_PLAN.md and primary SerpApi, World Bank and OWID documentation.
 PR #2 is merged at `97509de80ecb92bb0c6f4a4f21e6317956ebb6c0`.

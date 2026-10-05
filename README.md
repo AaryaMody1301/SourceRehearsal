@@ -29,6 +29,8 @@ Activate the environment:
 source .venv/bin/activate
 # Windows PowerShell
 .venv\Scripts\Activate.ps1
+# Windows Command Prompt
+.venv\Scripts\activate.bat
 ```
 
 ```bash
@@ -39,6 +41,10 @@ python -m streamlit run app.py
 The sidebar password field accepts your SerpApi key. Alternatively set `SERPAPI_API_KEY`
 in the shell before launch. `.env.example` is documentation; `.env` is not automatically
 loaded. Never commit your key. It is not included in caches or exported evidence.
+
+Light and dark modes use Streamlit's native theme throughout the app. Change the theme
+in the app's settings menu. The result table places before/after growth, highlights and
+ranks together; all population values remain available in the expanded evidence table.
 
 ## Try the synthetic example (no API key)
 
@@ -68,6 +74,12 @@ source-rehearsal --scenario "Threshold flip" --output reports/demo
    Download discovery JSON even when no replacement is found; it preserves queries,
    search IDs, errors, cache labels, and the local attempt ledger. Changing the baseline
    hides searches made for the previous baseline; discover again for the new source.
+   Queries find dataset pages; selected countries/years are validated after download.
+   The UI counts excluded baseline and unsupported results. If results are stale, enable
+   **Refresh cached searches** before discovery to bypass both local and SerpApi caches.
+   This reserves up to three new attempts, may consume credits, and never resets the ledger.
+   A successful search with no supported alternative is not a completed live workflow;
+   refresh does not guarantee a match. CSV upload remains available with metadata review.
    The MVP automatically downloads only results identifying
    World Bank `SP.POP.TOTL` or OWID `population-unwpp`. Other results remain in the evidence.
 6. Select a replacement, download it, and review its metadata before running the rehearsal.

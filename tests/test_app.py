@@ -46,6 +46,7 @@ def test_live_discovery_without_key_is_disabled():
     app = AppTest.from_file(str(APP)).run(timeout=20)
     app.radio[1].set_value("SerpApi discovery").run()
     assert button(app, "Discover alternatives").disabled
+    assert next(c for c in app.checkbox if c.label == "Refresh cached searches").disabled
     assert not app.exception
 
 
@@ -133,7 +134,7 @@ def test_full_discovery_download_review_and_rehearsal(monkeypatch, tmp_path):
     button(app, "Download replacement").click().run(timeout=20)
     button(app, "Rehearse replacement").click().run(timeout=20)
     assert app.session_state["report"][1]["verdict"] == "Insufficient evidence"
-    app.checkbox[0].check().run()
+    next(c for c in app.checkbox if c.label.startswith("I reviewed")).check().run()
     button(app, "Rehearse replacement").click().run(timeout=20)
     result = app.session_state["report"][1]
     assert result["verdict"] == "Passes stated checks"
@@ -145,7 +146,8 @@ def test_full_discovery_download_review_and_rehearsal(monkeypatch, tmp_path):
 
     definition["text"] = "Revised population definition."
     button(app, "Download replacement").click().run(timeout=20)
-    assert not app.checkbox[0].value  # Same CSV bytes, different evidence needs a fresh review.
+    # Same CSV bytes, different evidence needs a fresh review.
+    assert not next(c for c in app.checkbox if c.label.startswith("I reviewed")).value
     button(app, "Rehearse replacement").click().run(timeout=20)
     assert app.session_state["report"][1]["verdict"] == "Insufficient evidence"
 
@@ -167,6 +169,12 @@ def test_full_discovery_download_review_and_rehearsal(monkeypatch, tmp_path):
     button(app, "Discover alternatives").click().run(timeout=20)
     assert not app.session_state["discovery"][1]["candidates"]
     assert any("Baseline source excluded" in j.value for j in app.json)
+    assert any("3 baseline results excluded" in c.value for c in app.caption)
+    assert any("upload a CSV" in i.value for i in app.info)
+    next(c for c in app.checkbox if c.label == "Refresh cached searches").check().run()
+    button(app, "Discover alternatives").click().run(timeout=20)
+    assert len([host for host in calls if host == "serpapi.com"]) == 6
+    assert not app.session_state["discovery"][1]["candidates"]
     monkeypatch.setattr(HttpClient, "get", failed_get)
     button(app, "Fetch World Bank baseline").click().run(timeout=20)
     assert "wb_baseline" not in app.session_state
