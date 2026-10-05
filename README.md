@@ -188,7 +188,8 @@ Suggested track: **Open Innovation**. Explain why SerpApi matters: replacement c
 come from real organic search results, with query/search ID provenance. Fixed adapters make
 those discovered sources executable; adapters are not treated as search results themselves.
 
-Before submitting: run the real-data path, review attribution/terms, make a locally running
+The [captured real run](examples/real-run-2026-10-05/README.md) completed the main real-data
+path. Before submitting: review attribution/terms and make a locally running
 screen recording under three minutes, and disclose AI development tools. Recording, final
 submission, and verifying remaining credits are owner tasks. Hackathon deadline currently:
 October 10, 2026 at 23:59 IST. Verify the official rules before submitting.
@@ -205,11 +206,11 @@ Primary documentation:
 ## License
 
 Project code is MIT-licensed. Source datasets retain their publisher's licenses and attribution
-requirements; the code license does not relicense third-party data. Bundled example values
-are project-authored synthetic fixtures.
+requirements; the code license does not relicense third-party data. Synthetic fixtures and
+attributed captured real evidence are stored separately under examples/.
 
 ## Submission readiness
 
 See [submission guide](docs/SUBMISSION.md) for the real OWID → searched World Bank acceptance
-run, demo script, disclosures and unfinished owner release gates. The software build does
-not itself establish a successful real searched rehearsal or a submitted entry.
+run, demo script, disclosures and unfinished owner release gates. The captured owner run
+establishes an observed real searched rehearsal; recording and entry submission remain pending.

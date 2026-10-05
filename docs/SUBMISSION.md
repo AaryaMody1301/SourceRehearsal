@@ -1,6 +1,7 @@
 # Submission guide
 
-Status: engineering preparation complete; live owner acceptance and submission pending.
+Status: engineering and the main owner live acceptance complete; final release checks,
+video and entry submission pending. See the captured real run in examples/real-run-2026-10-05.
 The final PR is not a declaration that the project has been submitted.
 
 ## Project description
@@ -71,8 +72,8 @@ Record the application running locally; report the real verdict even if no decis
 
 ## Release gates
 
-- [ ] Owner completes real searched comparison and checks the exported evidence.
-- [ ] Actual real-run evidence is sanitized, attributed and made available for review.
+- [x] Owner completes real searched comparison; report arithmetic independently checked.
+- [x] Actual real-run JSON/HTML evidence is inspected and attributed in examples/real-run-2026-10-05.
 - [ ] Python CI and light/dark browser jobs pass on the final commit.
 - [ ] Owner verifies Windows installation; current automated install checks run on Linux.
 - [ ] Public repository and video open in a private window without requesting access.

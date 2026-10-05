@@ -1,0 +1,675 @@
+{
+  "format_version": "1.1",
+  "generated_at": "2026-10-05T10:18:42.532289+00:00",
+  "contract": {
+    "countries": [
+      "IND",
+      "USA",
+      "BRA"
+    ],
+    "start_year": 2020,
+    "end_year": 2022,
+    "threshold_pct": 1.0,
+    "value_tolerance_pct": 0.5,
+    "indicator": "population_total",
+    "unit": "persons",
+    "kind": "estimate"
+  },
+  "baseline": {
+    "metadata": {
+      "publisher": "Our World in Data",
+      "source_url": "https://ourworldindata.org/grapher/population-unwpp",
+      "indicator": "population_total",
+      "unit": "persons",
+      "kind": "estimate",
+      "license": "https://ourworldindata.org/how-to-use-our-world-in-data",
+      "definition": "Total population, measured on 1 July of the year shown.",
+      "reviewed": true,
+      "synthetic": false,
+      "upstream": [
+        "UN World Population Prospects"
+      ]
+    },
+    "raw_sha256": "69cefa274afbd51851369b79f364c41303c1581cedbbbca5ca38a475364888d8",
+    "retrieved_at": "2026-10-05T10:17:09.987597+00:00",
+    "rows_loaded": 9,
+    "transforms": [
+      "Columns: Code→country; Year→year; Population (historical estimates)→population",
+      "Country codes: trim whitespace and uppercase",
+      "Explicit population multiplier: 1",
+      "Select only requested ISO3 country codes and historical years"
+    ],
+    "evidence": {
+      "chart_metadata": {
+        "chart": {
+          "title": "Population",
+          "subtitle": "",
+          "note": "",
+          "citation": "UN, World Population Prospects (2024)",
+          "originalChartUrl": "https://ourworldindata.org/grapher/population-unwpp",
+          "selection": [
+            "China",
+            "India",
+            "United States"
+          ]
+        },
+        "columns": {
+          "Population - Sex: all - Age: all - Variant: estimates": {
+            "titleShort": "Population",
+            "titleLong": "Population - UN WPP",
+            "descriptionShort": "Total population, measured on 1 July of the year shown.",
+            "descriptionProcessing": "The UN publishes population by single year of age. We aggregate these into the broader age groups shown here (e.g. 0–14, 15–64, 65+, 18+, 15–49). Our continental aggregates (Africa, Asia, Europe, North America, South America, Oceania) are computed by summing across countries, and may differ slightly from regional aggregates the UN publishes directly, which use a different country grouping.",
+            "unit": "people",
+            "timespan": "1950-2023",
+            "type": "Integer",
+            "owidVariableId": 951674,
+            "shortName": "population__sex_all__age_all__variant_estimates",
+            "lastUpdated": "2024-07-12",
+            "nextUpdate": "2027-07-12",
+            "citationShort": "UN, World Population Prospects (2024) – processed by Our World in Data",
+            "citationLong": "UN, World Population Prospects (2024) – processed by Our World in Data. “Population – UN WPP” [dataset]. United Nations, “World Population Prospects”; United Nations, “World Population Prospects – Interim Update” [original data].",
+            "fullMetadata": "https://api.ourworldindata.org/v1/indicators/951674.metadata.json"
+          }
+        },
+        "dateDownloaded": "2026-10-05"
+      },
+      "original_unit": "people",
+      "data_url": "https://ourworldindata.org/grapher/population-unwpp.csv?useColumnShortNames=false",
+      "metadata_column": "Population - Sex: all - Age: all - Variant: estimates",
+      "csv_column": "Population (historical estimates)"
+    }
+  },
+  "candidate": {
+    "metadata": {
+      "publisher": "World Bank",
+      "source_url": "https://data.worldbank.org/indicator/SP.POP.TOTL",
+      "indicator": "population_total",
+      "unit": "persons",
+      "kind": "estimate",
+      "license": "https://datacatalog.worldbank.org/int/public-licenses#cc-by",
+      "definition": "Total population is based on the de facto definition of population, which counts all residents regardless of legal status or citizenship. The values shown are midyear estimates.",
+      "reviewed": true,
+      "synthetic": false,
+      "upstream": [
+        "UN World Population Prospects"
+      ]
+    },
+    "raw_sha256": "69850e7fcbdb1d3e4bca16f9b80d45a03bac690899e60c1b0360d3d51b84de22",
+    "retrieved_at": "2026-10-05T10:18:38.380924+00:00",
+    "rows_loaded": 9,
+    "transforms": [
+      "World Bank JSON → country/year/population; persons, no scaling",
+      "All API pages loaded"
+    ],
+    "evidence": {
+      "indicator_metadata": {
+        "id": "SP.POP.TOTL",
+        "name": "Population, total",
+        "unit": "",
+        "source": {
+          "id": "2",
+          "value": "World Development Indicators"
+        },
+        "sourceNote": "Total population is based on the de facto definition of population, which counts all residents regardless of legal status or citizenship. The values shown are midyear estimates.",
+        "sourceOrganization": "World Population Prospects, United Nations (UN), uri: https://population.un.org/wpp/, publisher: UN Population Division;\nStatistical databases and publications from national statistical offices, National Statistical Offices (NSOs), uri: https://unstats.un.org/home/nso_sites/, publisher: National Statistical Offices;\nEurostat: Demographic Statistics, Eurostat (ESTAT), uri: https://ec.europa.eu/eurostat/data/database?node_code=earn_ses_monthly, publisher: Eurostat;\nPopulation and Vital Statistics Report (various years), United Nations (UN), uri: https://unstats.un.org, publisher: UN Statistics Division",
+        "topics": [
+          {
+            "id": "19",
+            "value": "Climate Change"
+          },
+          {
+            "id": "8",
+            "value": "Health "
+          }
+        ]
+      },
+      "page_count": 1,
+      "declared_rows": 9,
+      "hash_convention": "SHA-256 of raw JSON pages separated by LF",
+      "discovery": {
+        "query": "site:data.worldbank.org \"Population, total\" \"SP.POP.TOTL\"",
+        "search_id": "6ac379727223f4a042b35297",
+        "result_url": "https://data.worldbank.org/indicator/SP.POP.TOTL?locations=C4",
+        "title": "Population, total - East Asia and the Pacific (IFC ...",
+        "cached": false
+      },
+      "searches": [
+        {
+          "engine": "google",
+          "returned_engine": "google",
+          "returned_language": "en",
+          "query_displayed": "site:data.worldbank.org \"Population, total\" \"SP.POP.TOTL\"",
+          "returned_query": "site:data.worldbank.org \"Population, total\" \"SP.POP.TOTL\"",
+          "query_matches_request": true,
+          "query": "site:data.worldbank.org \"Population, total\" \"SP.POP.TOTL\"",
+          "search_id": "6ac379727223f4a042b35297",
+          "created_at": "2026-10-05 10:18:26 UTC",
+          "organic_results_state": "Results for exact spelling",
+          "organic_results": [
+            {
+              "title": "Population, total - East Asia and the Pacific (IFC ...",
+              "link": "https://data.worldbank.org/indicator/SP.POP.TOTL?locations=C4",
+              "snippet": "Population, total - East Asia and the Pacific (IFC classification) from The World Bank: Data.",
+              "position": 1
+            },
+            {
+              "title": "Population, total - Tuvalu, Low & middle income",
+              "link": "https://data.worldbank.org/indicator/SP.POP.TOTL?locations=TV-XO",
+              "snippet": "Population, total - Tuvalu, Low & middle income · Labor force, total · Population, total · Population, female · Population, female (% of total population).",
+              "position": 2
+            },
+            {
+              "title": "Population, total - Papua New Guinea, Virgin Islands (U.S.)",
+              "link": "https://data.worldbank.org/indicator/SP.POP.TOTL?locations=PG-VI",
+              "snippet": "Population, total - Papua New Guinea, Virgin Islands (U.S.) from The World Bank: Data.",
+              "position": 3
+            },
+            {
+              "title": "Population, male (% of total population) - Pre-demographic ...",
+              "link": "https://data.worldbank.org/indicator/SP.POP.TOTL.MA.ZS?locations=V1",
+              "snippet": "Population, male · Population, total · Population, female · Population, female (% of total population) · International migrant stock, total · International migrant ...",
+              "position": 4
+            },
+            {
+              "title": "Population, total - Belarus, Jordan",
+              "link": "https://data.worldbank.org/indicator/SP.POP.TOTL?locations=BY-JO",
+              "snippet": "Population, total - Belarus, Jordan · Labor force, total · Population, total · Population, female · Population, female (% of total population) · Population, male.",
+              "position": 5
+            },
+            {
+              "title": "Population, total - , American Samoa",
+              "link": "https://data.worldbank.org/indicator/SP.POP.TOTL?locations=NG%20-AS",
+              "snippet": "Population, total - , American Samoa · Labor force, total · Population, total · Population, female · Population, female (% of total population) · Population, male.",
+              "position": 6
+            },
+            {
+              "title": "Population, total - El Salvador",
+              "link": "https://data.worldbank.org/indicator/SP.POP.TOTL?page=2&locations=SV",
+              "snippet": "Population, total - El Salvador. World Population Prospects, United Nations ( UN ), uri: population.un.org/wpp, publisher: UN Population Division ...",
+              "position": 7
+            },
+            {
+              "title": "Population, total - Liberia, Tajikistan",
+              "link": "https://data.worldbank.org/indicator/SP.POP.TOTL?locations=LR-TJ",
+              "snippet": "Population, total - Liberia, Tajikistan · Labor force, total · Population, total · Population, female · Population, female (% of total population) · Population, male.",
+              "position": 8
+            },
+            {
+              "title": "Population, total - Nigeria, Low & middle income",
+              "link": "https://data.worldbank.org/indicator/SP.POP.TOTL?locations=NG-XO",
+              "snippet": "Population, total - Nigeria, Low & middle income · Labor force, total · Population, total · Population, female · Population, female (% of total population).",
+              "position": 9
+            },
+            {
+              "title": "Population, total - Belarus, Cote d'Ivoire",
+              "link": "https://data.worldbank.org/indicator/SP.POP.TOTL?locations=BY-CI",
+              "snippet": "Population, total - Belarus, Cote d'Ivoire · Labor force, total · Population, total · Population, female · Population, female (% of total population) · Population, ...",
+              "position": 10
+            }
+          ],
+          "cached": false
+        },
+        {
+          "engine": "google",
+          "returned_engine": "google",
+          "returned_language": "en",
+          "query_displayed": "\"SP.POP.TOTL\" population dataset",
+          "returned_query": "\"SP.POP.TOTL\" population dataset",
+          "query_matches_request": true,
+          "query": "\"SP.POP.TOTL\" population dataset",
+          "search_id": "6ac379734707f11d4c468821",
+          "created_at": "2026-10-05 10:18:27 UTC",
+          "organic_results_state": "Results for exact spelling",
+          "organic_results": [
+            {
+              "title": "Population, total | Data",
+              "link": "https://data.worldbank.org/indicator/SP.POP.TOTL",
+              "snippet": "All Countries and Economies ; Afghanistan · 43,844.11 ; Albania · 2,349.58 ; Algeria · 47,435.31 ; American Samoa · 46.03 ; Andorra · 82.90.",
+              "position": 1
+            },
+            {
+              "title": "Population, total - Glossary | DataBank - World Bank",
+              "link": "https://databank.worldbank.org/metadataglossary/gender-statistics/series/SP.POP.TOTL",
+              "snippet": "Code, SP.POP.TOTL ; Indicator Name, Population, total ; Long definition, Total population is based on the de facto definition of population, which counts all ...",
+              "position": 2
+            },
+            {
+              "title": "World Population Data by Country (SP.POP.TOTL) API",
+              "link": "https://apify.com/pepeschuster/world-bank-indicators-api/examples/world-population-by-country",
+              "snippet": "Fetch total population figures for every country using World Bank indicator SP.POP.TOTL with countries set to 'all'. Returns a global population dataset ...",
+              "position": 3
+            },
+            {
+              "title": "Population data from the World Bank — world_bank_pop",
+              "link": "https://tidyr.tidyverse.org/reference/world_bank_pop.html",
+              "snippet": "Indicator name: SP.POP.GROW = population growth, SP.POP.TOTL = total population, SP.URB.GROW = urban population growth ...",
+              "position": 4
+            },
+            {
+              "title": "Introduction • pddcs",
+              "link": "https://worldbank.github.io/pddcs/articles/introduction.html",
+              "snippet": "In order to fetch the most recent population data from Eurostat, we simply specify the indicator code ( 'SP.POP.TOTL ... dataset should be convert to data or ...",
+              "position": 5
+            },
+            {
+              "title": "Population, Total - SP.POP.TOTL",
+              "link": "https://fgeerolf.com/data/wdi/SP.POP.TOTL.html",
+              "snippet": "WDI Data · Other Data · Home. Population, Total - SP.POP.TOTL. Data - WDI. Author. François Geerolf. Info. LAST_DOWNLOAD. Code. tibble(dataset = c(\"SP.POP.TOTL\" ...",
+              "position": 6
+            },
+            {
+              "title": "Population, total - Glossary | DataBank - World Bank",
+              "link": "https://databank.worldbank.org/metadataglossary/subnational-population/series/SP.POP.TOTL",
+              "snippet": "Code, SP.POP.TOTL ; Indicator Name, Population, total ; Long definition, Population total is the estimate of de facto mid-year population at first level ...",
+              "position": 7
+            },
+            {
+              "title": "Population by regions for the year 2023",
+              "link": "https://figshare.com/articles/dataset/Population_by_regions_for_the_year_2023/27100381",
+              "snippet": "Population, total, SP.POP.TOTL, American Samoa, ASM ; Population, total, SP.POP.TOTL, Andorra, AND ...",
+              "position": 8
+            },
+            {
+              "title": "mattduck/wbpy: Python interface to the World Bank ...",
+              "link": "https://github.com/mattduck/wbpy",
+              "snippet": "... population, poverty, technology, and more. The Climate API lets you ... SP.POP.TOTL\" dataset = api.get_dataset(total_population, iso_country_codes ...",
+              "position": 9
+            }
+          ],
+          "cached": false
+        }
+      ],
+      "search_diagnostics": [
+        {
+          "query": "site:data.worldbank.org \"Population, total\" \"SP.POP.TOTL\"",
+          "search_id": "6ac379727223f4a042b35297",
+          "position": 1,
+          "title": "Population, total - East Asia and the Pacific (IFC ...",
+          "url": "https://data.worldbank.org/indicator/SP.POP.TOTL?locations=C4",
+          "reason": "Downloadable candidate; metadata review required"
+        },
+        {
+          "query": "site:data.worldbank.org \"Population, total\" \"SP.POP.TOTL\"",
+          "search_id": "6ac379727223f4a042b35297",
+          "position": 2,
+          "title": "Population, total - Tuvalu, Low & middle income",
+          "url": "https://data.worldbank.org/indicator/SP.POP.TOTL?locations=TV-XO",
+          "reason": "Duplicate source"
+        },
+        {
+          "query": "site:data.worldbank.org \"Population, total\" \"SP.POP.TOTL\"",
+          "search_id": "6ac379727223f4a042b35297",
+          "position": 3,
+          "title": "Population, total - Papua New Guinea, Virgin Islands (U.S.)",
+          "url": "https://data.worldbank.org/indicator/SP.POP.TOTL?locations=PG-VI",
+          "reason": "Duplicate source"
+        },
+        {
+          "query": "site:data.worldbank.org \"Population, total\" \"SP.POP.TOTL\"",
+          "search_id": "6ac379727223f4a042b35297",
+          "position": 4,
+          "title": "Population, male (% of total population) - Pre-demographic ...",
+          "url": "https://data.worldbank.org/indicator/SP.POP.TOTL.MA.ZS?locations=V1",
+          "reason": "Unsupported source or indicator"
+        },
+        {
+          "query": "site:data.worldbank.org \"Population, total\" \"SP.POP.TOTL\"",
+          "search_id": "6ac379727223f4a042b35297",
+          "position": 5,
+          "title": "Population, total - Belarus, Jordan",
+          "url": "https://data.worldbank.org/indicator/SP.POP.TOTL?locations=BY-JO",
+          "reason": "Duplicate source"
+        },
+        {
+          "query": "site:data.worldbank.org \"Population, total\" \"SP.POP.TOTL\"",
+          "search_id": "6ac379727223f4a042b35297",
+          "position": 6,
+          "title": "Population, total - , American Samoa",
+          "url": "https://data.worldbank.org/indicator/SP.POP.TOTL?locations=NG%20-AS",
+          "reason": "Duplicate source"
+        },
+        {
+          "query": "site:data.worldbank.org \"Population, total\" \"SP.POP.TOTL\"",
+          "search_id": "6ac379727223f4a042b35297",
+          "position": 7,
+          "title": "Population, total - El Salvador",
+          "url": "https://data.worldbank.org/indicator/SP.POP.TOTL?page=2&locations=SV",
+          "reason": "Duplicate source"
+        },
+        {
+          "query": "site:data.worldbank.org \"Population, total\" \"SP.POP.TOTL\"",
+          "search_id": "6ac379727223f4a042b35297",
+          "position": 8,
+          "title": "Population, total - Liberia, Tajikistan",
+          "url": "https://data.worldbank.org/indicator/SP.POP.TOTL?locations=LR-TJ",
+          "reason": "Duplicate source"
+        },
+        {
+          "query": "site:data.worldbank.org \"Population, total\" \"SP.POP.TOTL\"",
+          "search_id": "6ac379727223f4a042b35297",
+          "position": 9,
+          "title": "Population, total - Nigeria, Low & middle income",
+          "url": "https://data.worldbank.org/indicator/SP.POP.TOTL?locations=NG-XO",
+          "reason": "Duplicate source"
+        },
+        {
+          "query": "site:data.worldbank.org \"Population, total\" \"SP.POP.TOTL\"",
+          "search_id": "6ac379727223f4a042b35297",
+          "position": 10,
+          "title": "Population, total - Belarus, Cote d'Ivoire",
+          "url": "https://data.worldbank.org/indicator/SP.POP.TOTL?locations=BY-CI",
+          "reason": "Duplicate source"
+        },
+        {
+          "query": "\"SP.POP.TOTL\" population dataset",
+          "search_id": "6ac379734707f11d4c468821",
+          "position": 1,
+          "title": "Population, total | Data",
+          "url": "https://data.worldbank.org/indicator/SP.POP.TOTL",
+          "reason": "Duplicate source"
+        },
+        {
+          "query": "\"SP.POP.TOTL\" population dataset",
+          "search_id": "6ac379734707f11d4c468821",
+          "position": 2,
+          "title": "Population, total - Glossary | DataBank - World Bank",
+          "url": "https://databank.worldbank.org/metadataglossary/gender-statistics/series/SP.POP.TOTL",
+          "reason": "Unsupported source or indicator"
+        },
+        {
+          "query": "\"SP.POP.TOTL\" population dataset",
+          "search_id": "6ac379734707f11d4c468821",
+          "position": 3,
+          "title": "World Population Data by Country (SP.POP.TOTL) API",
+          "url": "https://apify.com/pepeschuster/world-bank-indicators-api/examples/world-population-by-country",
+          "reason": "Unsupported source or indicator"
+        },
+        {
+          "query": "\"SP.POP.TOTL\" population dataset",
+          "search_id": "6ac379734707f11d4c468821",
+          "position": 4,
+          "title": "Population data from the World Bank — world_bank_pop",
+          "url": "https://tidyr.tidyverse.org/reference/world_bank_pop.html",
+          "reason": "Unsupported source or indicator"
+        },
+        {
+          "query": "\"SP.POP.TOTL\" population dataset",
+          "search_id": "6ac379734707f11d4c468821",
+          "position": 5,
+          "title": "Introduction • pddcs",
+          "url": "https://worldbank.github.io/pddcs/articles/introduction.html",
+          "reason": "Unsupported source or indicator"
+        },
+        {
+          "query": "\"SP.POP.TOTL\" population dataset",
+          "search_id": "6ac379734707f11d4c468821",
+          "position": 6,
+          "title": "Population, Total - SP.POP.TOTL",
+          "url": "https://fgeerolf.com/data/wdi/SP.POP.TOTL.html",
+          "reason": "Unsupported source or indicator"
+        },
+        {
+          "query": "\"SP.POP.TOTL\" population dataset",
+          "search_id": "6ac379734707f11d4c468821",
+          "position": 7,
+          "title": "Population, total - Glossary | DataBank - World Bank",
+          "url": "https://databank.worldbank.org/metadataglossary/subnational-population/series/SP.POP.TOTL",
+          "reason": "Unsupported source or indicator"
+        },
+        {
+          "query": "\"SP.POP.TOTL\" population dataset",
+          "search_id": "6ac379734707f11d4c468821",
+          "position": 8,
+          "title": "Population by regions for the year 2023",
+          "url": "https://figshare.com/articles/dataset/Population_by_regions_for_the_year_2023/27100381",
+          "reason": "Unsupported source or indicator"
+        },
+        {
+          "query": "\"SP.POP.TOTL\" population dataset",
+          "search_id": "6ac379734707f11d4c468821",
+          "position": 9,
+          "title": "mattduck/wbpy: Python interface to the World Bank ...",
+          "url": "https://github.com/mattduck/wbpy",
+          "reason": "Unsupported source or indicator"
+        }
+      ],
+      "search_errors": [
+        {
+          "query": "\"total population\" annual country dataset",
+          "error": "Publisher/API is unavailable or timed out. Try again later."
+        }
+      ]
+    }
+  },
+  "checks": {
+    "baseline": [],
+    "candidate": []
+  },
+  "synthetic": false,
+  "caveats": [
+    "Results cover only this contract, required country/year scope, and calculations.",
+    "An unchanged report does not prove equivalence, accuracy, or future stability.",
+    "Metadata review is a human attestation, not automatic verification of the definition.",
+    "Shared upstream sources: UN World Population Prospects"
+  ],
+  "values": [
+    {
+      "country": "BRA",
+      "year": 2020,
+      "population_baseline": 208660845.0,
+      "population_candidate": 208660842,
+      "delta_pct": -1.437739794e-06,
+      "exceeds_tolerance": false
+    },
+    {
+      "country": "IND",
+      "year": 2020,
+      "population_baseline": 1402617694.0,
+      "population_candidate": 1402617695,
+      "delta_pct": 7.1295259e-08,
+      "exceeds_tolerance": false
+    },
+    {
+      "country": "USA",
+      "year": 2020,
+      "population_baseline": 339436156.0,
+      "population_candidate": 331578104,
+      "delta_pct": -2.315030930293704,
+      "exceeds_tolerance": true
+    },
+    {
+      "country": "BRA",
+      "year": 2021,
+      "population_baseline": 209550291.0,
+      "population_candidate": 209550294,
+      "delta_pct": 1.431637231e-06,
+      "exceeds_tolerance": false
+    },
+    {
+      "country": "IND",
+      "year": 2021,
+      "population_baseline": 1414203896.0,
+      "population_candidate": 1414203896,
+      "delta_pct": 0.0,
+      "exceeds_tolerance": false
+    },
+    {
+      "country": "USA",
+      "year": 2021,
+      "population_baseline": 340161438.0,
+      "population_candidate": 332100166,
+      "delta_pct": -2.369837112459527,
+      "exceeds_tolerance": true
+    },
+    {
+      "country": "BRA",
+      "year": 2022,
+      "population_baseline": 210306411.0,
+      "population_candidate": 210306415,
+      "delta_pct": 1.901986724e-06,
+      "exceeds_tolerance": false
+    },
+    {
+      "country": "IND",
+      "year": 2022,
+      "population_baseline": 1425423209.0,
+      "population_candidate": 1425423212,
+      "delta_pct": 2.10463802e-07,
+      "exceeds_tolerance": false
+    },
+    {
+      "country": "USA",
+      "year": 2022,
+      "population_baseline": 341534041.0,
+      "population_candidate": 333996304,
+      "delta_pct": -2.207023633114213,
+      "exceeds_tolerance": true
+    }
+  ],
+  "report_rows": [
+    {
+      "country": "BRA",
+      "year": 2020,
+      "population_baseline": 208660845.0,
+      "growth_pct_baseline": null,
+      "highlighted_baseline": false,
+      "population_rank_baseline": 3,
+      "population_candidate": 208660842,
+      "growth_pct_candidate": null,
+      "highlighted_candidate": false,
+      "population_rank_candidate": 3,
+      "growth_delta_pp": null,
+      "flag_changed": false,
+      "rank_changed": false
+    },
+    {
+      "country": "IND",
+      "year": 2020,
+      "population_baseline": 1402617694.0,
+      "growth_pct_baseline": null,
+      "highlighted_baseline": false,
+      "population_rank_baseline": 1,
+      "population_candidate": 1402617695,
+      "growth_pct_candidate": null,
+      "highlighted_candidate": false,
+      "population_rank_candidate": 1,
+      "growth_delta_pp": null,
+      "flag_changed": false,
+      "rank_changed": false
+    },
+    {
+      "country": "USA",
+      "year": 2020,
+      "population_baseline": 339436156.0,
+      "growth_pct_baseline": null,
+      "highlighted_baseline": false,
+      "population_rank_baseline": 2,
+      "population_candidate": 331578104,
+      "growth_pct_candidate": null,
+      "highlighted_candidate": false,
+      "population_rank_candidate": 2,
+      "growth_delta_pp": null,
+      "flag_changed": false,
+      "rank_changed": false
+    },
+    {
+      "country": "BRA",
+      "year": 2021,
+      "population_baseline": 209550291.0,
+      "growth_pct_baseline": 0.426263969169693,
+      "highlighted_baseline": false,
+      "population_rank_baseline": 3,
+      "population_candidate": 209550294,
+      "growth_pct_candidate": 0.426266850777868,
+      "highlighted_candidate": false,
+      "population_rank_candidate": 3,
+      "growth_delta_pp": 2.881608174e-06,
+      "flag_changed": false,
+      "rank_changed": false
+    },
+    {
+      "country": "IND",
+      "year": 2021,
+      "population_baseline": 1414203896.0,
+      "growth_pct_baseline": 0.826041340385375,
+      "highlighted_baseline": false,
+      "population_rank_baseline": 1,
+      "population_candidate": 1414203896,
+      "growth_pct_candidate": 0.826041268501188,
+      "highlighted_candidate": false,
+      "population_rank_candidate": 1,
+      "growth_delta_pp": -7.1884187e-08,
+      "flag_changed": false,
+      "rank_changed": false
+    },
+    {
+      "country": "USA",
+      "year": 2021,
+      "population_baseline": 340161438.0,
+      "growth_pct_baseline": 0.213672582363333,
+      "highlighted_baseline": false,
+      "population_rank_baseline": 2,
+      "population_candidate": 332100166,
+      "growth_pct_candidate": 0.157447670308164,
+      "highlighted_candidate": false,
+      "population_rank_candidate": 2,
+      "growth_delta_pp": -0.056224912055169,
+      "flag_changed": false,
+      "rank_changed": false
+    },
+    {
+      "country": "BRA",
+      "year": 2022,
+      "population_baseline": 210306411.0,
+      "growth_pct_baseline": 0.360829849670785,
+      "highlighted_baseline": false,
+      "population_rank_baseline": 3,
+      "population_candidate": 210306415,
+      "growth_pct_candidate": 0.360830321717431,
+      "highlighted_candidate": false,
+      "population_rank_candidate": 3,
+      "growth_delta_pp": 4.72046646e-07,
+      "flag_changed": false,
+      "rank_changed": false
+    },
+    {
+      "country": "IND",
+      "year": 2022,
+      "population_baseline": 1425423209.0,
+      "growth_pct_baseline": 0.793330652795765,
+      "highlighted_baseline": false,
+      "population_rank_baseline": 1,
+      "population_candidate": 1425423212,
+      "growth_pct_candidate": 0.793330864929254,
+      "highlighted_candidate": false,
+      "population_rank_candidate": 1,
+      "growth_delta_pp": 2.12133489e-07,
+      "flag_changed": false,
+      "rank_changed": false
+    },
+    {
+      "country": "USA",
+      "year": 2022,
+      "population_baseline": 341534041.0,
+      "growth_pct_baseline": 0.403515168582991,
+      "highlighted_baseline": false,
+      "population_rank_baseline": 2,
+      "population_candidate": 333996304,
+      "growth_pct_candidate": 0.570953644148431,
+      "highlighted_candidate": false,
+      "population_rank_candidate": 2,
+      "growth_delta_pp": 0.16743847556544,
+      "flag_changed": false,
+      "rank_changed": false
+    }
+  ],
+  "summary": {
+    "required_keys": 9,
+    "decision_rows": 9,
+    "flag_changes": 0,
+    "rank_changes": 0,
+    "values_exceeding_tolerance": 3,
+    "max_absolute_value_delta_pct": 2.3698371124595274
+  },
+  "verdict": "Exceeds value tolerance"
+}

@@ -150,13 +150,13 @@ the extra audit PR precedes the final submission-preparation PR.
    `source-rehearsal --check-discovery --output reports/live-discovery`.
    Keep the generated JSON as observed search/download evidence. Inspect download checks;
    a completed command does not approve metadata or establish a report verdict.
-2. Use IND/USA/BRA, 2020–2022; choose World Bank and fetch the baseline.
+2. Use IND/USA/BRA, 2020–2022; choose Our World in Data and fetch the baseline.
 3. Read the definition, units, and terms; confirm the metadata review.
 4. Enter the SerpApi key locally and discover alternatives. Verify three or fewer query
-   attempts, real search IDs, and a genuine supported OWID result. Inspect selection
+   attempts, real search IDs, and a genuine supported World Bank result. Inspect selection
    diagnostics and the local ledger (not the account billing balance). Do not claim the
    discovery passes if no supported replacement was found.
-5. Download OWID and review the retrieved metadata; verify required country/year coverage.
+5. Download World Bank and review the retrieved metadata; verify required country/year coverage.
 6. Rehearse, inspect every result category, and save the JSON evidence with hashes,
    search provenance, publisher metadata, and the shared upstream-source caveat.
 7. Record observed results and any schema/network issues here before calling the live
@@ -180,3 +180,28 @@ not a benchmark of source replacement quality and cannot support a live-performa
   public real-run artifacts, local video and submission remain owner acceptance gates.
 - Required Python 3.11/3.13 and light/dark browser jobs run on the final PR; their final
   statuses must be inspected before release. See SUBMISSION.md.
+
+
+## Owner real acceptance — October 5, 2026, 15:48 IST
+
+The [captured real report](../examples/real-run-2026-10-05/README.md) completes OWID baseline
+→ fresh SerpApi-discovered World Bank → download → owner metadata review → rehearsal.
+Both sources have synthetic=false, reviewed=true, nine complete unique required keys,
+source hashes, transformations and source metadata. The selected returned query matches
+its request and the selected URL exists in the embedded organic results.
+
+Observed verdict: Exceeds value tolerance. Three US values differ by −2.3150%, −2.3698%
+and −2.2070%; the 0.5% tolerance is exceeded while all rankings and 1% highlights stay
+unchanged. This illustrates why unchanged decisions do not imply interchangeable values.
+No cause for the US differences was established. Shared-upstream limits remain disclosed.
+
+Independent arithmetic verified every delta, growth, highlight and rank; HTML embedded
+evidence exactly matches JSON. Original raw publisher downloads were not attached, so
+hashes are retained rather than independently rehashed. The metadata review is the owner's
+attestation. The earlier separate discovery export has different IDs and no candidates;
+it does not describe the successful search snapshot embedded in this report. One general
+query timed out in the successful run; the supported candidate was still found/downloaded.
+
+All Python 3.11/3.13 and light/dark browser jobs passed on commit 635e174. The new commit
+adds evidence/documentation; inspect its CI before merge. Windows fresh-install verification,
+optional second-scope evaluation, recording, accessible video and entry submission remain.
