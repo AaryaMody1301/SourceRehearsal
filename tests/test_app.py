@@ -44,6 +44,18 @@ def test_live_discovery_without_key_is_disabled():
     assert not app.exception
 
 
+def test_corrupt_search_cache_does_not_crash_the_app(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / ".cache").mkdir()
+    (tmp_path / ".cache/search.sqlite").write_bytes(b"invalid sqlite data")
+    app = AppTest.from_file(str(APP)).run(timeout=20)
+    app.sidebar.text_input[1].set_value("fixture-key").run()
+    app.radio[1].set_value("SerpApi discovery").run()
+    assert not app.exception
+    assert button(app, "Discover alternatives").disabled
+    assert any("cache is unavailable or invalid" in error.value for error in app.error)
+
+
 def test_full_discovery_download_review_and_rehearsal(monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)
     calls = []

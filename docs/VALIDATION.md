@@ -1,4 +1,39 @@
-# Validation status — October 3, 2026
+# Validation status — October 5, 2026
+
+## Pre-submission audit
+
+The audit reviewed every application module and test file against README.md,
+IMPLEMENTATION_PLAN.md and primary SerpApi, World Bank and OWID documentation.
+PR #2 is merged at `97509de80ecb92bb0c6f4a4f21e6317956ebb6c0`.
+
+| Confirmed issue | Fix / evidence |
+| --- | --- |
+| First-year rank changes could incorrectly pass | Rank every required year; regression swaps 2020 ranks within 0.5% tolerance and expects Changes the report |
+| Invalid HTTPS references could pass | Parse URLs, require a host/valid port, reject embedded credentials/whitespace |
+| Fractional World Bank years/pagination silently truncated; boolean counts accepted | Strict integer pagination and four-digit year strings; reject boolean population values |
+| Interrupted HTTP body reads escaped error handling | Translate HTTP protocol/read failures into sanitized NetworkError |
+| Corrupt SQLite cache crashed UI/CLI | Close connections, translate database errors, show actionable UI/CLI messages without network calls |
+| Successful searches without IDs supplied candidates | Require a nonempty string search ID before caching/selecting results |
+| Nonstandard NaN/Infinity JSON could break strict exports | Reject non-finite JSON constants at network/publisher boundaries |
+
+- 94 tests pass locally on Python 3.12; Ruff lint and format checks pass. Concurrent
+  unique queries cannot exceed the local attempt budget.
+- All eight synthetic verdict controls pass. The threshold-flip CLI still shows exactly
+  one changed highlight, zero rank changes, and zero beyond-tolerance values. It now
+  compares nine report rows instead of six because first-year ranks are included.
+- JSON evidence version is now 1.1. First-year growth/delta fields are null, never a
+  fabricated zero; first-year highlights are false. HTML handles unavailable growth.
+- The browser installer remains blocked locally by an UnknownIssuer certificate error.
+  A CI browser job uses the runner's installed Chrome through pinned agent-browser 0.38.2,
+  exercises the rendered offline workflow, and saves screenshots/errors as an artifact.
+  Its actual outcome must be recorded after the job runs; adding a job is not a pass.
+- Live SerpApi validation, real-data cross-publisher rehearsal, and the recording remain
+  unverified. No credentials were configured or inferred. This audit does not establish
+  that no undiscovered bugs exist.
+
+Documentation now explicitly states the first-year policy, URL-syntax/accessibility
+distinction, three-letter identifier validation (not a complete ISO registry), and that
+the extra audit PR precedes the final submission-preparation PR.
 
 ## Phase 2 — live-workflow readiness
 

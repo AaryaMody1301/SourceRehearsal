@@ -187,16 +187,26 @@ with right:
         st.write("Search for public total population datasets matching this contract.")
         baseline_url = baseline.metadata.source_url if baseline else ""
         discovery_id = fingerprint([scope_id, baseline_mode, baseline_url])
-        client = SearchClient(key, Path(".cache/search.sqlite")) if key.strip() else None
-        if st.button("Discover alternatives", disabled=not key.strip()):
+        client, usage = None, None
+        if key.strip():
+            try:
+                client = SearchClient(key, Path(".cache/search.sqlite"))
+                usage = client.usage()
+            except ValueError as exc:
+                client = None
+                st.error(str(exc))
+        if st.button("Discover alternatives", disabled=client is None):
             st.session_state.pop("discovery", None)
             st.session_state.pop("live_candidate", None)
             st.session_state.pop("report", None)
             with st.spinner("Searching up to three queries…"):
-                result = client.discover(contract, baseline_url)
-                st.session_state["discovery"] = (discovery_id, result)
+                try:
+                    result = client.discover(contract, baseline_url)
+                    usage = result["local_budget"]
+                    st.session_state["discovery"] = (discovery_id, result)
+                except ValueError as exc:
+                    st.error(str(exc))
         if client:
-            usage = client.usage()
             st.caption(
                 f"Local search guard: {usage['attempts']}/{usage['limit']} uncached attempts used; "
                 f"{usage['remaining']} remaining. Not your account balance. "
@@ -319,6 +329,10 @@ else:
     chart = decisions.copy()
     chart["label"] = chart.country + " / " + chart.year.astype(str)
     st.bar_chart(chart.set_index("label")[["growth_pct_baseline", "growth_pct_candidate"]])
+    st.caption(
+        "Ranks cover every selected year. First-year growth is unavailable without a prior "
+        "year in the contract and is not highlighted."
+    )
     with st.expander("All population values and differences"):
         st.dataframe(pd.DataFrame(report["values"]), hide_index=True)
 

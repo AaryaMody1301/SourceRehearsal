@@ -1,6 +1,7 @@
 import json
 import sqlite3
 import time
+from contextlib import closing, contextmanager
 from dataclasses import asdict, dataclass
 from hashlib import sha256
 from pathlib import Path
@@ -60,15 +61,27 @@ class SearchClient:
         self.cache = Path(cache)
         self.http = http or HttpClient()
         self.budget = budget
-        self.cache.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            self.cache.parent.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            raise NetworkError(
+                "Local search cache folder is unavailable or not writable."
+            ) from None
         with self.connection() as db:
             db.execute(
                 "CREATE TABLE IF NOT EXISTS cache (key TEXT PRIMARY KEY, at REAL, data TEXT)"
             )
             db.execute("CREATE TABLE IF NOT EXISTS attempts (at REAL)")
 
+    @contextmanager
     def connection(self):
-        return sqlite3.connect(self.cache, timeout=10)
+        try:
+            with closing(sqlite3.connect(self.cache, timeout=10)) as db, db:
+                yield db
+        except sqlite3.Error:
+            raise NetworkError(
+                "Local search cache is unavailable or invalid. Check the .cache folder."
+            ) from None
 
     def usage(self) -> dict:
         with self.connection() as db:
@@ -96,7 +109,6 @@ class SearchClient:
                 "q": query,
                 "api_key": self.api_key,
                 "hl": "en",
-                "num": 10,
             }
         )
         response = self.http.json(url)
@@ -119,6 +131,8 @@ class SearchClient:
             raise NetworkError(
                 "SerpApi returned an incomplete search. No candidates were inferred."
             )
+        if not isinstance(metadata.get("id"), str) or not metadata["id"].strip():
+            raise NetworkError("SerpApi search evidence is missing a valid search ID.")
         # Persist and export only the necessary evidence, never full responses or API keys.
         organic = response.get("organic_results", [])
         if not isinstance(organic, list):

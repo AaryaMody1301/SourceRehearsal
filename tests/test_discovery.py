@@ -1,4 +1,6 @@
 import json
+from concurrent.futures import ThreadPoolExecutor
+from http.client import IncompleteRead
 from urllib.parse import parse_qs, urlsplit
 
 import pytest
@@ -88,6 +90,22 @@ def test_budget_reserves_before_call_and_counts_failures(tmp_path):
     assert client.usage() == {"attempts": 1, "limit": 1, "remaining": 0}
 
 
+def test_concurrent_queries_cannot_overrun_the_local_budget(tmp_path):
+    fixture = SearchFixture()
+    client = SearchClient("fixture-key", tmp_path / "cache.sqlite", fixture, budget=2)
+
+    def attempt(index):
+        try:
+            client.search(f"unique query {index}")
+            return True
+        except NetworkError:
+            return False
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        results = list(pool.map(attempt, range(8)))
+    assert sum(results) == len(fixture.calls) == client.usage()["attempts"] == 2
+
+
 @pytest.mark.parametrize("status", ["Success", "Error"])
 def test_documented_empty_results_are_evidence_not_authentication_failure(tmp_path, status):
     class EmptyResponse:
@@ -142,8 +160,64 @@ def test_source_recognition_is_strict(url):
         "file:///etc/passwd",
         "https://api.worldbank.org.evil.test/data",
         "https://user:pass@api.worldbank.org/data",
+        "https://api.worldbank.org:bad/data",
+        "https://[invalid",
     ],
 )
 def test_downloads_reject_unapproved_urls_before_network(url):
     with pytest.raises(NetworkError):
         HttpClient().get(url)
+
+
+def test_interrupted_download_is_a_sanitized_network_error(monkeypatch):
+    class Response:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def read(self, limit):
+            raise IncompleteRead(b"private partial response", 100)
+
+    class Opener:
+        def open(self, *args, **kwargs):
+            return Response()
+
+    monkeypatch.setattr("source_rehearsal.network.build_opener", lambda *args: Opener())
+    with pytest.raises(NetworkError) as error:
+        HttpClient().get("https://serpapi.com/search.json?api_key=fixture-secret")
+    assert "private" not in str(error.value)
+    assert "fixture-secret" not in str(error.value)
+
+
+@pytest.mark.parametrize("raw", [b'{"unit":NaN}', b'{"value":Infinity}', b'{"value":-Infinity}'])
+def test_nonfinite_json_is_rejected_before_evidence_export(monkeypatch, raw):
+    monkeypatch.setattr(HttpClient, "get", lambda self, url: raw)
+    with pytest.raises(NetworkError, match="valid JSON"):
+        HttpClient().json("https://api.worldbank.org/v2/data")
+
+
+def test_corrupt_cache_has_an_actionable_error_and_no_network_call(tmp_path):
+    cache = tmp_path / "search.sqlite"
+    cache.write_bytes(b"not a SQLite database")
+    fixture = SearchFixture()
+    with pytest.raises(NetworkError, match="cache is unavailable or invalid"):
+        SearchClient("fixture-secret", cache, fixture)
+    assert not fixture.calls
+
+
+@pytest.mark.parametrize("search_id", [None, "", 123])
+def test_success_without_search_id_cannot_supply_candidates(tmp_path, search_id):
+    class MissingId:
+        def json(self, url):
+            return {
+                "search_metadata": {"status": "Success", "id": search_id},
+                "organic_results": [{"link": "https://data.worldbank.org/indicator/SP.POP.TOTL"}],
+            }
+
+    result = SearchClient("fixture-key", tmp_path / "cache.sqlite", MissingId()).discover(
+        demo_contract()
+    )
+    assert not result["candidates"]
+    assert len(result["errors"]) == 3

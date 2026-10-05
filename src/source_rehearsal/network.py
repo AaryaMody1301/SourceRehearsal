@@ -1,4 +1,5 @@
 import json
+from http.client import HTTPException
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
@@ -17,18 +18,26 @@ class NoRedirects(HTTPRedirectHandler):
         return None
 
 
+def reject_nonfinite(value):
+    raise ValueError("JSON contains a non-finite number.")
+
+
 class HttpClient:
     """Bounded, fixed-host downloads. Errors never expose request URLs or credentials."""
 
     def get(self, url: str) -> bytes:
-        parsed = urlsplit(url)
-        if (
-            parsed.scheme != "https"
-            or parsed.hostname not in HOSTS
-            or parsed.username
-            or parsed.password
-            or parsed.port not in (None, 443)
-        ):
+        try:
+            parsed = urlsplit(url)
+            supported = (
+                parsed.scheme == "https"
+                and parsed.hostname in HOSTS
+                and parsed.username is None
+                and parsed.password is None
+                and parsed.port in (None, 443)
+            )
+        except ValueError:
+            supported = False
+        if not supported:
             raise NetworkError("Download host or URL is unsupported.")
         request = Request(url, headers={"User-Agent": "SourceRehearsal/0.1"})
         try:
@@ -38,7 +47,7 @@ class HttpClient:
             raise NetworkError(
                 f"Publisher/API returned HTTP {exc.code}. No data was loaded."
             ) from None
-        except (URLError, OSError, TimeoutError):
+        except (URLError, OSError, HTTPException):
             raise NetworkError(
                 "Publisher/API is unavailable or timed out. Try again later."
             ) from None
@@ -48,7 +57,7 @@ class HttpClient:
 
     def json(self, url: str):
         try:
-            return json.loads(self.get(url))
+            return json.loads(self.get(url), parse_constant=reject_nonfinite)
         except (ValueError, UnicodeError) as exc:
             if isinstance(exc, NetworkError):
                 raise

@@ -63,6 +63,34 @@ def test_worldbank_rejects_malformed_metadata_and_pages():
         world_bank(demo_contract(), fixture)
 
 
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("date", 2020.9),
+        ("date", True),
+        ("date", "2020.9"),
+        ("value", True),
+        ("total", 9.9),
+        ("pages", 2.9),
+    ],
+)
+def test_worldbank_does_not_coerce_malformed_years_counts_or_pagination(field, value):
+    fixture = WorldBankFixture()
+    original = fixture.get
+
+    def malformed(url):
+        payload = json.loads(original(url))
+        if field in ("date", "value"):
+            payload[1][0][field] = value
+        else:
+            payload[0][field] = value
+        return json.dumps(payload).encode()
+
+    fixture.get = malformed
+    with pytest.raises(NetworkError, match="malformed"):
+        world_bank(demo_contract(), fixture)
+
+
 class OwidFixture:
     def __init__(self, unit="people"):
         self.unit = unit
