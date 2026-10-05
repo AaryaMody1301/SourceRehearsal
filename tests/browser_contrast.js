@@ -21,7 +21,10 @@
     if (!elements.length) continue;
     const ratios = elements.map(element => {
       const bg = background(element);
-      const fg = blend(rgba(getComputedStyle(element).color), bg);
+      const color = rgba(getComputedStyle(element).color);
+      let opacity = color[3] ?? 1;
+      for (let node = element; node; node = node.parentElement) opacity *= Number(getComputedStyle(node).opacity);
+      const fg = blend([...color.slice(0, 3), opacity], bg);
       const a = luminance(fg), b = luminance(bg);
       const ratio = (Math.max(a, b) + .05) / (Math.min(a, b) + .05);
       if (ratio < 4.5) throw new Error(`Low contrast ${ratio.toFixed(2)}: ${selector} ${element.textContent.slice(0, 70)}`);

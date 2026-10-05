@@ -19,6 +19,10 @@ from source_rehearsal.network import HttpClient
 from source_rehearsal.publishers import download, world_bank
 
 st.set_page_config(page_title="SourceRehearsal", page_icon="🔁", layout="wide")
+st.markdown(
+    '<style>[data-testid="stCaptionContainer"] {opacity: 1;}</style>',
+    unsafe_allow_html=True,
+)
 st.title("SourceRehearsal")
 st.write("Find a replacement data source. See what changes in your report before you switch.")
 

@@ -13,6 +13,8 @@
   text. Removed the custom color overrides; all surfaces now use native Streamlit themes.
 - The first contrast run also caught white text on Streamlit's default filled red
   rehearsal button at 3.30:1. The action now uses the standard native button style.
+- Streamlit dims captions with ancestor opacity. Captions now retain full opacity
+  without overriding theme colors; browser contrast checks account for ancestor opacity.
 - The report table now shows before/after growth, highlights and ranks together instead
   of burying them among raw population columns.
 - Search queries now target dataset pages without forcing ISO3 codes and selected years
