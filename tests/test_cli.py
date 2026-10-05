@@ -54,7 +54,7 @@ def test_discovery_check_exports_evidence_without_approving_metadata(
             else [
                 {
                     "title": "Population",
-                    "link": "https://ourworldindata.org/grapher/population-unwpp",
+                    "link": "https://data.worldbank.org/indicator/SP.POP.TOTL",
                 }
             ],
         }

@@ -164,3 +164,19 @@ the extra audit PR precedes the final submission-preparation PR.
 
 The labelled synthetic controls illustrate behavior and test failure handling. They are
 not a benchmark of source replacement quality and cannot support a live-performance claim.
+
+
+## Final-readiness engineering pass — October 5, 2026
+
+- Fresh Linux virtual environment installed successfully with Python 3.12.3, Streamlit
+  1.65.0, pandas 3.0.6 and DuckDB 1.5.6. Windows owner verification remains pending.
+- 100 deterministic tests pass, including the real-mode OWID → World Bank UI flow with
+  fixture responses, searched CSV provenance/review invalidation, returned-query mismatch
+  withholding, and the shared mixed-source guard. Fixtures do not establish live API success.
+- Ruff lint and formatting pass. The CLI synthetic control retains one highlight flip.
+- Both actual publisher adapters downloaded all nine IND/USA/BRA 2020–2022 records in this
+  environment. Each retains a metadata-review hold; neither was auto-approved.
+- No key is configured here. Actual SerpApi discovery followed by reviewed real comparison,
+  public real-run artifacts, local video and submission remain owner acceptance gates.
+- Required Python 3.11/3.13 and light/dark browser jobs run on the final PR; their final
+  statuses must be inspected before release. See SUBMISSION.md.

@@ -65,7 +65,9 @@ source-rehearsal --scenario "Threshold flip" --output reports/demo
 ## Use real public data
 
 1. Set countries and years in the sidebar (historical years, 1960–2025).
-2. Choose **World Bank** and fetch a baseline, or upload your own UTF-8 CSV. Uploaded data
+2. Choose **Our World in Data** (recommended) or **World Bank** and fetch a baseline,
+   or upload your own UTF-8 CSV. Synthetic example exposes only synthetic replacements;
+   mixed real/synthetic comparisons are blocked in the engine. Uploaded data
    needs explicit country/year/value mappings, units, source reference, definition, and terms.
 3. Review baseline metadata and the publisher's reuse terms.
 4. Choose **SerpApi discovery**, enter your key, and discover alternatives.
@@ -74,7 +76,10 @@ source-rehearsal --scenario "Threshold flip" --output reports/demo
    Download discovery JSON even when no replacement is found; it preserves queries,
    search IDs, errors, cache labels, and the local attempt ledger. Changing the baseline
    hides searches made for the previous baseline; discover again for the new source.
-   Queries find dataset pages; selected countries/years are validated after download.
+   Queries prioritize alternatives to the baseline. Selected countries/years are validated
+   after download. Requested and returned queries are exported; a conflicting returned
+   query prevents those results from supplying a replacement. Missing returned query
+   evidence is explicitly unverified.
    The UI counts excluded baseline and unsupported results. If results are stale, enable
    **Refresh cached searches** before discovery to bypass both local and SerpApi caches.
    This reserves up to three new attempts, may consume credits, and never resets the ledger.
@@ -82,6 +87,9 @@ source-rehearsal --scenario "Threshold flip" --output reports/demo
    refresh does not guarantee a match. CSV upload remains available with metadata review.
    The MVP automatically downloads only results identifying
    World Bank `SP.POP.TOTL` or OWID `population-unwpp`. Other results remain in the evidence.
+   **Import CSV from a search result** links a manually obtained CSV to a selected HTTPS
+   result, its search ID and your provenance attestation. Use that result URL as the source
+   reference and complete metadata review. Arbitrary remote URLs are never fetched.
 6. Select a replacement, download it, and review its metadata before running the rehearsal.
 
 Both publishers may derive estimates from UN World Population Prospects. Matching data
@@ -106,8 +114,9 @@ To verify real SerpApi discovery and download any supported alternative, set
 source-rehearsal --check-discovery --output reports/live-discovery
 ```
 
-This uses the same IND/USA/BRA 2020–2022 contract, excludes World Bank as the baseline,
-and saves sanitized discovery/download evidence. It shares the app's cache and 200-attempt
+This uses the same IND/USA/BRA 2020–2022 contract, excludes OWID as the default baseline,
+and saves sanitized discovery/download evidence. Use `--baseline world-bank` for the
+reverse discovery path. It shares the app's cache and 200-attempt
 guard. Exit 1 means a search/cache error, no supported alternative, or a failed download; exit 2
 means missing configuration. Exit 0 verifies search and download completion only, not
 metadata approval, complete coverage, or a report verdict. Inspect the recorded checks,
@@ -198,3 +207,9 @@ Primary documentation:
 Project code is MIT-licensed. Source datasets retain their publisher's licenses and attribution
 requirements; the code license does not relicense third-party data. Bundled example values
 are project-authored synthetic fixtures.
+
+## Submission readiness
+
+See [submission guide](docs/SUBMISSION.md) for the real OWID → searched World Bank acceptance
+run, demo script, disclosures and unfinished owner release gates. The software build does
+not itself establish a successful real searched rehearsal or a submitted entry.

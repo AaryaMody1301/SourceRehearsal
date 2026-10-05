@@ -219,3 +219,14 @@ def test_malformed_uploaded_source_references_cannot_pass(url):
     data = demo.baseline()
     data.metadata = replace(data.metadata, synthetic=False, source_url=url)
     assert compare(data, data, demo.demo_contract())["verdict"] == "Insufficient evidence"
+
+
+def test_mixed_synthetic_real_comparison_is_blocked():
+    candidate = demo.baseline()
+    candidate.metadata = replace(
+        candidate.metadata, synthetic=False, source_url="https://example.com/data"
+    )
+    report = compare(demo.baseline(), candidate, demo.demo_contract())
+    assert report["verdict"] == "Insufficient evidence"
+    assert "Synthetic and real" in report["checks"]["candidate"][-1]
+    assert not report["report_rows"]

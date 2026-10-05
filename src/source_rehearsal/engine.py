@@ -109,6 +109,10 @@ def describe(dataset: Dataset) -> dict:
 
 def compare(baseline: Dataset, candidate: Dataset, contract: Contract) -> dict:
     problems = {"baseline": checks(baseline, contract), "candidate": checks(candidate, contract)}
+    if baseline.metadata.synthetic != candidate.metadata.synthetic:
+        problems["candidate"].append(
+            "Synthetic and real sources cannot be compared; use separate workflows."
+        )
     report = {
         "format_version": "1.1",
         "generated_at": timestamp(),
