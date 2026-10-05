@@ -46,13 +46,23 @@ def recognize(link: str) -> tuple[str, str] | None:
     return None
 
 
-def queries() -> list[str]:
+def queries(exclude_url: str = "") -> list[str]:
     # Dataset pages span countries/years; validate the selected scope after download.
-    return [
+    choices = [
         '"total population" annual country dataset',
         'site:data.worldbank.org "Population, total" "SP.POP.TOTL"',
         "site:ourworldindata.org/grapher population",
     ]
+    baseline = recognize(exclude_url)
+    if baseline:
+        # Spend all three attempts on alternatives, rather than a baseline-only query.
+        index = 1 if baseline[0] == "World Bank" else 2
+        choices[index] = (
+            'site:ourworldindata.org "population-unwpp"'
+            if index == 1
+            else '"SP.POP.TOTL" population dataset'
+        )
+    return choices
 
 
 class SearchClient:
@@ -91,7 +101,7 @@ class SearchClient:
     def search(self, query: str, *, refresh: bool = False) -> dict:
         if not self.api_key:
             raise NetworkError("Configure a SerpApi key to run live discovery.")
-        key = sha256(("google/en/" + query).encode()).hexdigest()
+        key = sha256(("google/en/v2/" + query).encode()).hexdigest()
         with self.connection() as db:
             db.execute("BEGIN IMMEDIATE")
             cached = db.execute("SELECT at, data FROM cache WHERE key=?", [key]).fetchone()
@@ -138,7 +148,29 @@ class SearchClient:
         organic = response.get("organic_results", [])
         if not isinstance(organic, list):
             raise NetworkError("SerpApi returned an unexpected search result schema.")
+        parameters = response.get("search_parameters", {})
+        parameters = parameters if isinstance(parameters, dict) else {}
+        returned_query = parameters.get("q")
+        returned_query = (
+            returned_query.replace(self.api_key, "[redacted]")[:2000]
+            if isinstance(returned_query, str)
+            else None
+        )
         data = {
+            "engine": "google",
+            "returned_engine": parameters.get("engine")
+            if parameters.get("engine") == "google"
+            else None,
+            "returned_language": parameters.get("hl") if parameters.get("hl") == "en" else None,
+            "query_displayed": str(information.get("query_displayed", "")).replace(
+                self.api_key, "[redacted]"
+            )[:2000]
+            if isinstance(information, dict)
+            else "",
+            "returned_query": returned_query,
+            "query_matches_request": returned_query == query
+            if returned_query is not None
+            else None,
             "query": query,
             "search_id": str(metadata.get("id", "")),
             "created_at": str(metadata.get("created_at", "")),
@@ -146,8 +178,14 @@ class SearchClient:
             if isinstance(information, dict)
             else "",
             "organic_results": [
-                {k: str(item.get(k, ""))[:2000] for k in ("title", "link", "snippet")}
-                for item in organic[:20]
+                {
+                    **{
+                        k: str(item.get(k, "")).replace(self.api_key, "[redacted]")[:2000]
+                        for k in ("title", "link", "snippet")
+                    },
+                    "position": index,
+                }
+                for index, item in enumerate(organic[:20], start=1)
                 if isinstance(item, dict)
             ],
         }
@@ -162,7 +200,7 @@ class SearchClient:
         candidates, evidence, errors, diagnostics = [], [], [], []
         excluded = recognize(exclude_url)
         seen = set()
-        for query in queries():
+        for query in queries(exclude_url):
             try:
                 result = self.search(query, refresh=refresh)
             except NetworkError as exc:
@@ -171,7 +209,9 @@ class SearchClient:
             evidence.append(result)
             for row in result["organic_results"]:
                 supported = recognize(row["link"])
-                if not supported:
+                if result.get("query_matches_request") is False:
+                    reason = "Returned query differs from request; result withheld"
+                elif not supported:
                     reason = "Unsupported source or indicator"
                 elif supported == excluded:
                     reason = "Baseline source excluded"
@@ -195,7 +235,14 @@ class SearchClient:
                         )
                     )
                 diagnostics.append(
-                    {"query": query, "title": row["title"], "url": row["link"], "reason": reason}
+                    {
+                        "query": query,
+                        "search_id": result["search_id"],
+                        "position": row["position"],
+                        "title": row["title"],
+                        "url": row["link"],
+                        "reason": reason,
+                    }
                 )
         return {
             "candidates": candidates,

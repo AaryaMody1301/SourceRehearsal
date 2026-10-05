@@ -28,6 +28,12 @@ def main():
         action="store_true",
         help="Verify search/discovered downloads using SERPAPI_API_KEY from your shell.",
     )
+    parser.add_argument(
+        "--baseline",
+        choices=["owid", "world-bank"],
+        default="owid",
+        help="Baseline publisher excluded by --check-discovery (default: owid).",
+    )
     args = parser.parse_args()
     if args.check_discovery:
         key = os.environ.get("SERPAPI_API_KEY", "").strip()
@@ -36,7 +42,11 @@ def main():
                 "Set SERPAPI_API_KEY in your shell; never pass or publish the key in evidence."
             )
         contract = demo.demo_contract()
-        baseline_url = "https://data.worldbank.org/indicator/SP.POP.TOTL"
+        baseline_url = (
+            "https://ourworldindata.org/grapher/population-unwpp"
+            if args.baseline == "owid"
+            else "https://data.worldbank.org/indicator/SP.POP.TOTL"
+        )
         try:
             discovery = SearchClient(key, Path(".cache/search.sqlite")).discover(
                 contract, baseline_url

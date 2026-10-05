@@ -236,3 +236,45 @@ def test_success_without_search_id_cannot_supply_candidates(tmp_path, search_id)
     )
     assert not result["candidates"]
     assert len(result["errors"]) == 3
+
+
+def test_returned_query_mismatch_is_retained_but_cannot_supply_candidates(tmp_path):
+    class Mismatched:
+        def json(self, url):
+            return {
+                "search_metadata": {"status": "Success", "id": "mismatch"},
+                "search_parameters": {"q": "unrelated secret-token", "api_key": "secret-token"},
+                "organic_results": [{"link": "https://data.worldbank.org/indicator/SP.POP.TOTL"}],
+            }
+
+    result = SearchClient("secret-token", tmp_path / "search.sqlite", Mismatched()).discover(
+        demo_contract()
+    )
+    assert not result["candidates"]
+    assert all(r["query_matches_request"] is False for r in result["searches"])
+    assert all("result withheld" in r["reason"] for r in result["diagnostics"])
+    assert "secret-token" not in json.dumps(result)
+    assert b"secret-token" not in (tmp_path / "search.sqlite").read_bytes()
+
+
+def test_returned_query_is_allowlisted_and_provider_queries_avoid_baseline(tmp_path):
+    class Echo:
+        def json(self, url):
+            query = parse_qs(urlsplit(url).query)["q"][0]
+            return {
+                "search_metadata": {"status": "Success", "id": "echo"},
+                "search_parameters": {
+                    "q": query,
+                    "engine": "google",
+                    "hl": "en",
+                    "api_key": "private",
+                },
+                "organic_results": [],
+            }
+
+    result = SearchClient("private", tmp_path / "search.sqlite", Echo()).discover(
+        demo_contract(), "https://ourworldindata.org/grapher/population-unwpp"
+    )
+    assert all(r["query_matches_request"] for r in result["searches"])
+    assert all("site:ourworldindata" not in r["query"] for r in result["searches"])
+    assert "private" not in json.dumps(result)

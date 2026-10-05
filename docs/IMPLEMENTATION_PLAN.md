@@ -89,3 +89,12 @@ and October 10 for submission. Recheck official rules before relying on the sche
 - https://docs.owid.io/projects/etl/api/chart-api/
 - https://ourworldindata.org/population-sources
 - https://serpapi.github.io/serpapi-india-hackathon-2026/rules.html
+
+## Final submission-readiness implementation (October 5)
+
+One final PR adds OWID baselines, separate synthetic replacement choices, a shared
+mixed-source guard, baseline-aware discovery queries, sanitized request/response
+diagnostics, and a searched-CSV import with explicit provenance attestation. The CLI
+now defaults discovery exclusion to OWID with `--baseline world-bank` available.
+See SUBMISSION.md for the acceptance run and owner release gates. Additional search-engine
+fallbacks are deferred until live diagnostics establish a need; no new dependencies were added.

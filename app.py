@@ -16,7 +16,7 @@ from source_rehearsal.evidence import to_html, to_json
 from source_rehearsal.ingest import csv_dataset, read_csv
 from source_rehearsal.models import Contract, Mapping, Metadata
 from source_rehearsal.network import HttpClient
-from source_rehearsal.publishers import download, world_bank
+from source_rehearsal.publishers import download, our_world_in_data, world_bank
 
 st.set_page_config(page_title="SourceRehearsal", page_icon="🔁", layout="wide")
 st.markdown(
@@ -56,7 +56,7 @@ def review(data, prefix):
         return replace(data, metadata=replace(meta, reviewed=reviewed))
 
 
-def upload_dataset(prefix):
+def upload_dataset(prefix, discovered=None):
     file = st.file_uploader(f"{prefix} CSV", type=["csv"], key=prefix + "_file")
     if not file:
         st.info("Upload a UTF-8 CSV containing ISO3 country codes, years, and population values.")
@@ -83,6 +83,15 @@ def upload_dataset(prefix):
     )
     publisher = st.text_input("Publisher", key=prefix + "_publisher")
     source_url = st.text_input("Public HTTPS source URL", key=prefix + "_url")
+    if discovered:
+        st.write("Selected search result: " + discovered["url"])
+        linked = st.checkbox(
+            "This CSV was obtained from the selected search result; I verified its provenance.",
+            key=prefix + "_provenance_" + fingerprint([sha256(raw).hexdigest(), discovered]),
+        )
+        if not linked or source_url != discovered["url"]:
+            st.info("Confirm provenance and use the selected result URL as the source reference.")
+            return None
     definition = st.text_area(
         "Population definition and historical scope evidence", key=prefix + "_def"
     )
@@ -101,7 +110,11 @@ def upload_dataset(prefix):
         definition=definition,
     )
     try:
-        return review(csv_dataset(raw, Mapping(*mapped, scale=scale), meta), prefix)
+        data = csv_dataset(raw, Mapping(*mapped, scale=scale), meta)
+        if discovered:
+            data.evidence["discovery"] = discovered
+            data.transforms.append("User obtained CSV from a selected search result")
+        return review(data, prefix)
     except ValueError as exc:
         st.error(str(exc))
         return None
@@ -137,8 +150,11 @@ scope_id = fingerprint([contract.countries, contract.start_year, contract.end_ye
 left, right = st.columns(2, gap="large")
 with left:
     st.header("1. Baseline")
+    st.caption("Synthetic example is a separate demo; choose a publisher for a real rehearsal.")
     baseline_mode = st.radio(
-        "Baseline source", ["Synthetic example", "Upload CSV", "World Bank"], horizontal=True
+        "Baseline source",
+        ["Synthetic example", "Our World in Data", "World Bank", "Upload CSV"],
+        horizontal=True,
     )
     baseline = None
     if baseline_mode == "Synthetic example":
@@ -150,17 +166,23 @@ with left:
     elif baseline_mode == "Upload CSV":
         baseline = upload_dataset("Baseline")
     else:
-        if st.button("Fetch World Bank baseline"):
-            st.session_state.pop("wb_baseline", None)
+        storage = "wb_baseline" if baseline_mode == "World Bank" else "owid_baseline"
+        loader = world_bank if baseline_mode == "World Bank" else our_world_in_data
+        if st.button(f"Fetch {baseline_mode} baseline"):
+            st.session_state.pop(storage, None)
             st.session_state.pop("report", None)
             try:
                 with st.spinner("Loading population data and indicator metadata…"):
-                    st.session_state["wb_baseline"] = (scope_id, world_bank(contract, HttpClient()))
+                    st.session_state[storage] = (scope_id, loader(contract, HttpClient()))
             except ValueError as exc:
                 st.error(str(exc))
-        saved = st.session_state.get("wb_baseline")
+        saved = st.session_state.get(storage)
         if saved and saved[0] == scope_id:
             baseline = review(saved[1], "Baseline")
+            st.caption(
+                f"Baseline loaded: {len(baseline.frame)} rows · "
+                f"metadata review: {baseline.metadata.reviewed}"
+            )
             st.dataframe(baseline.frame, hide_index=True)
         else:
             st.info("Fetch a source snapshot for the selected countries and years.")
@@ -169,7 +191,9 @@ with right:
     st.header("2. Replacement")
     replacement_mode = st.radio(
         "Replacement source",
-        ["Synthetic scenario", "SerpApi discovery", "Upload CSV"],
+        ["Synthetic scenario"]
+        if baseline_mode == "Synthetic example"
+        else ["SerpApi discovery", "Upload CSV"],
         horizontal=True,
     )
     candidate = None
@@ -204,7 +228,7 @@ with right:
                 "and may use credits."
             ),
         )
-        if st.button("Discover alternatives", disabled=client is None):
+        if st.button("Discover alternatives", disabled=client is None or baseline is None):
             st.session_state.pop("discovery", None)
             st.session_state.pop("live_candidate", None)
             st.session_state.pop("report", None)
@@ -215,6 +239,8 @@ with right:
                     st.session_state["discovery"] = (discovery_id, result)
                 except ValueError as exc:
                     st.error(str(exc))
+        if baseline is None:
+            st.info("Load a real baseline before discovering alternatives.")
         if client:
             st.caption(
                 f"Local search guard: {usage['attempts']}/{usage['limit']} uncached attempts used; "
@@ -246,6 +272,14 @@ with right:
                     st.dataframe(pd.DataFrame(discovery["diagnostics"]), hide_index=True)
             with st.expander("Search evidence, including unsupported results"):
                 st.json(discovery)
+            for search in discovery["searches"]:
+                if search.get("query_matches_request") is False:
+                    st.warning(
+                        "Returned query differs from the request. "
+                        "These results cannot supply a replacement."
+                    )
+                elif search.get("query_matches_request") is None:
+                    st.caption("Returned query is unavailable; correspondence is unverified.")
             st.download_button(
                 "Download discovery evidence",
                 to_json(
@@ -254,8 +288,33 @@ with right:
                 "source-discovery.json",
                 "application/json",
             )
+            imports = [
+                row
+                for row in discovery["diagnostics"]
+                if row["reason"] == "Unsupported source or indicator"
+                and row["url"].startswith("https://")
+            ]
+            manual = st.checkbox("Import CSV from a search result", disabled=not imports)
+            if manual and imports:
+                pick = st.selectbox(
+                    "Search result for manual import",
+                    range(len(imports)),
+                    format_func=lambda i: imports[i]["title"] + " — " + imports[i]["url"],
+                )
+                selected_result = imports[pick]
+                search = next(
+                    r for r in discovery["searches"] if r["query"] == selected_result["query"]
+                )
+                provenance = {
+                    **selected_result,
+                    "search_id": search["search_id"],
+                    "cached": search["cached"],
+                }
+                candidate = upload_dataset("Searched replacement", provenance)
+                if candidate:
+                    candidate.evidence["searches"] = discovery["searches"]
             found = discovery["candidates"]
-            if found:
+            if found and not manual:
                 selected = st.selectbox(
                     "Supported replacement",
                     range(len(found)),
@@ -265,6 +324,10 @@ with right:
                 choice_id = fingerprint([scope_id, asdict(chosen)])
                 st.write(chosen.title)
                 st.write(chosen.source_url)
+                st.caption(
+                    f"Search ID: {chosen.search_id} · cached: {chosen.cached}. "
+                    "Coverage and metadata remain pending until download/review."
+                )
                 if st.button("Download replacement"):
                     st.session_state.pop("live_candidate", None)
                     st.session_state.pop("report", None)
@@ -281,7 +344,7 @@ with right:
                 if loaded and loaded[0] == choice_id:
                     candidate = review(loaded[1], "Replacement")
                     st.dataframe(candidate.frame, hide_index=True)
-            else:
+            elif not manual:
                 st.info(
                     "No supported alternative source found. The baseline source is excluded; "
                     "search evidence is available above. You can upload a CSV and review its "
