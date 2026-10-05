@@ -26,7 +26,14 @@
 - Local suite: 96 passing tests, including refresh and actionable no-candidate UI checks.
   CI now verifies both native light and dark modes, captures screenshots and checks actual
   foreground/background contrast for visible text, labels, controls and result metrics.
-  Final theme screenshots/contrast results are pending verification for this follow-up.
+  Light/dark checks passed in run 37278074031. Retrieved and inspected both themes'
+  screenshots and contrast reports: sampled DOM text minimum 4.74:1 in light mode and
+  10.35:1 in dark mode, including ancestor opacity. Zero page errors. Charts/tables were
+  inspected visually; these samples are not a full accessibility conformance audit.
+  Console logs retain Streamlit sidebar-theme fallback and Vega chart warnings.
+  Evidence: https://github.com/AaryaMody1301/SourceRehearsal/actions/runs/37278074031
+  Push run 37278067994 also passed Python 3.11/3.13 and both themes; real publisher
+  downloads returned nine records each with only the expected human-review hold.
 - The revised live queries and a reviewed real-data comparison require an owner rerun.
   The uploaded evidence contains no supported replacement or report verdict. No key was
   configured in this execution, and no live success is inferred from fixtures/web search.
@@ -46,7 +53,7 @@ PR #2 is merged at `97509de80ecb92bb0c6f4a4f21e6317956ebb6c0`.
 | Successful searches without IDs supplied candidates | Require a nonempty string search ID before caching/selecting results |
 | Nonstandard NaN/Infinity JSON could break strict exports | Reject non-finite JSON constants at network/publisher boundaries |
 
-- 95 tests pass locally on Python 3.12; Ruff lint and format checks pass. Concurrent
+- 96 tests pass locally on Python 3.12; Ruff lint and format checks pass. Concurrent
   unique queries cannot exceed the local attempt budget.
 - Uploaded CSV mapping/review is exercised through Streamlit AppTest with bytes supplied
   at the upload boundary: missing metadata blocks the result, completed review passes,
@@ -70,9 +77,9 @@ PR #2 is merged at `97509de80ecb92bb0c6f4a4f21e6317956ebb6c0`.
   each, with only the expected human metadata-review hold. This checks download/coverage,
   not an approved comparison or search-driven discovery.
   Evidence: https://github.com/AaryaMody1301/SourceRehearsal/actions/runs/37272941245
-- Live SerpApi validation, real-data cross-publisher rehearsal, and the recording remain
-  unverified. No credentials were configured or inferred. This audit does not establish
-  that no undiscovered bugs exist.
+- Owner-provided live search evidence is analysed above. Revised-query validation,
+  real-data cross-publisher rehearsal and the recording remain unverified. No credentials
+  were configured in this execution. This audit does not rule out undiscovered bugs.
 
 Documentation now explicitly states the first-year policy, URL-syntax/accessibility
 distinction, three-letter identifier validation (not a complete ISO registry), and that
@@ -119,7 +126,8 @@ the extra audit PR precedes the final submission-preparation PR.
 
 ## Live status and remaining checks
 
-- SerpApi credentials and live query results: no key configured in this execution.
+- No SerpApi key configured in this execution. The owner-provided export records three
+  completed searches from local cache, with no supported replacement; see the follow-up.
 - World Bank live download succeeded in GitHub run 37106256855: nine records for
   IND/USA/BRA, 2020–2022; only the expected human metadata-review hold remained.
   The local execution proxy still blocks publisher networking.

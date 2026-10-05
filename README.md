@@ -165,8 +165,10 @@ Tests exercise report behavior, metadata holds, complete pagination, caching/bud
 source recognition, HTML escaping, and Streamlit interactions. Network tests use fixtures;
 passing them is **not** a claim of successful live API validation. Record actual live search
 and publisher outcomes separately in [docs/VALIDATION.md](docs/VALIDATION.md).
-CI also opens the app in Chrome through pinned `agent-browser`, runs the offline rehearsal,
-checks browser errors, and saves screenshots/snapshots in the `browser-evidence` artifact.
+CI also opens the app in Chrome through pinned `agent-browser`, runs the offline rehearsal
+in both native themes, and checks page errors and sampled rendered text contrast.
+Screenshots, snapshots and contrast reports are saved in `browser-evidence-light` and
+`browser-evidence-dark` artifacts. Caption opacity is adjusted for readable guidance text.
 This browser check uses synthetic inputs and does not validate live SerpApi discovery.
 
 See [the implementation plan](docs/IMPLEMENTATION_PLAN.md) for milestones and boundaries.

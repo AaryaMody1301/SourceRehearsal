@@ -71,7 +71,7 @@ The five acceptance milestones above describe functionality, not five separate P
 | --- | --- | --- |
 | 1 — MVP | Contract engine, discovery/adapters, interface, evidence, CI | PR #1 merged October 3; 63 tests and real publisher downloads verified |
 | 2 — Live-workflow readiness | Search diagnostics, local budget visibility, discovery exports, repeatable live-check command, stale-baseline fix | PR #2 merged; 70 tests; live SerpApi check still pending |
-| Audit fixes | First-year ranking, strict source/API validation, interrupted-download and cache handling, browser smoke check | Separate review before final submission preparation |
+| Audit fixes | First-year ranking, strict source/API validation, cache handling, theme readability, discovery refresh and diagnostics | PR #3; 96 tests; light/dark Chrome and contrast checks passed; revised live queries await owner rerun |
 | 3 — Submission preparation | Real-data evaluation, final fixes, demo walkthrough, limitations and AI disclosure | Reviewed real-data evidence, public repo, owner-recorded video under three minutes, submission |
 
 Tests run without paid services. Live publisher/API and SerpApi validation are reported
