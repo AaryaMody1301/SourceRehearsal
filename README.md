@@ -118,6 +118,7 @@ Rank ties share a rank. Floating
 point comparisons use a 1e-9 percentage-point margin at the threshold/tolerance boundary.
 No passing result proves semantic equivalence or future stability. Full required coverage
 is checked, rather than only the overlapping rows.
+Growth bars compare baseline and replacement side by side; their heights are not added.
 
 ## Cost and limits
 

@@ -328,7 +328,13 @@ else:
     st.dataframe(changed if not changed.empty else decisions, hide_index=True)
     chart = decisions.copy()
     chart["label"] = chart.country + " / " + chart.year.astype(str)
-    st.bar_chart(chart.set_index("label")[["growth_pct_baseline", "growth_pct_candidate"]])
+    st.bar_chart(
+        chart.set_index("label")[["growth_pct_baseline", "growth_pct_candidate"]].rename(
+            columns={"growth_pct_baseline": "Baseline", "growth_pct_candidate": "Replacement"}
+        ),
+        stack=False,
+        y_label="Annual growth (%)",
+    )
     st.caption(
         "Ranks cover every selected year. First-year growth is unavailable without a prior "
         "year in the contract and is not highlighted."

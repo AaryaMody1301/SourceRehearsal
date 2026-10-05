@@ -22,6 +22,10 @@ def test_default_demo_rehearsal_and_contract_invalidation():
     assert not app.exception
     assert any(w.value == "Changes the report" for w in app.warning)
     assert app.session_state["report"][1]["summary"]["flag_changes"] == 1
+    encoding = json.loads(app.get("vega_lite_chart")[0].proto.spec)["encoding"]
+    assert encoding["y"]["stack"] is False
+    assert encoding["xOffset"]["field"] == encoding["color"]["field"]
+    assert encoding["y"]["title"] == "Annual growth (%)"
     app.sidebar.number_input[3].set_value(2.0).run(timeout=20)
     assert not app.exception
     assert not app.metric

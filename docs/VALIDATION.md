@@ -9,6 +9,7 @@ PR #2 is merged at `97509de80ecb92bb0c6f4a4f21e6317956ebb6c0`.
 | Confirmed issue | Fix / evidence |
 | --- | --- |
 | First-year rank changes could incorrectly pass | Rank every required year; regression swaps 2020 ranks within 0.5% tolerance and expects Changes the report |
+| Comparison chart added baseline and replacement growth visually | Display side-by-side bars with an Annual growth (%) axis and clear series labels; AppTest asserts grouping and disabled stacking |
 | Invalid HTTPS references could pass | Parse URLs, require a host/valid port, reject embedded credentials/whitespace |
 | Fractional World Bank years/pagination silently truncated; boolean counts accepted | Strict integer pagination and four-digit year strings; reject boolean population values |
 | Interrupted HTTP body reads escaped error handling | Translate HTTP protocol/read failures into sanitized NetworkError |
@@ -29,11 +30,13 @@ PR #2 is merged at `97509de80ecb92bb0c6f4a4f21e6317956ebb6c0`.
 - The browser installer remains blocked locally by an UnknownIssuer certificate error.
   A CI browser job uses the runner's installed Chrome through pinned agent-browser 0.38.2,
   exercises the rendered offline workflow, and saves screenshots/errors as an artifact.
-  Browser verification succeeded in run 37273133012 with zero page errors and console
-  messages. Both Python matrix jobs passed. Screenshots and accessibility snapshots were
+  Browser verification succeeded in run 37273133012 with zero page errors. Both Python
+  matrix jobs passed. Screenshots and accessibility snapshots were
   inspected from the artifact. The final browser check also waits for evidence downloads
   before capture and scrolls to the result so streamed charts/controls finish rendering.
   Evidence: https://github.com/AaryaMody1301/SourceRehearsal/actions/runs/37273133012
+  The completed chart emitted a Vega scale-binding warning; it is not a page error.
+  Visual inspection of completed-chart screenshots identified the stacking issue above.
 - Both real publisher downloads succeeded again in run 37272941245: nine scoped records
   each, with only the expected human metadata-review hold. This checks download/coverage,
   not an approved comparison or search-driven discovery.
@@ -99,8 +102,9 @@ the extra audit PR precedes the final submission-preparation PR.
   Variant: estimates`; CSV column: `Population (historical estimates)`.
   Evidence: https://github.com/AaryaMody1301/SourceRehearsal/actions/runs/37106549046
 - Cross-publisher numerical/decision differences on real datasets.
-- A real browser visual review and screen recording. Streamlit AppTest exercised the
-  widgets and interactions; it does not validate browser rendering.
+- Offline browser visual review is complete through CI Chrome screenshots. The live
+  discovery/review workflow and screen recording remain unverified; Streamlit AppTest
+  exercises fixtures and does not establish live network behavior.
 
 ## Owner live acceptance procedure
 
